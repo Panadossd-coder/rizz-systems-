@@ -8,156 +8,106 @@ const decayBtn = document.getElementById('decayBtn');
 const peopleContainer = document.getElementById('peopleContainer');
 const alertBox = document.getElementById('alertBox');
 
-let state = load();
+let state = { people: [], lastDecay: Date.now() };
 
-/* ---------- Core ---------- */
-
+function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
 function load(){
-  return JSON.parse(localStorage.getItem(STORAGE_KEY)) || { people: [] };
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if(raw) state = JSON.parse(raw);
 }
 
-function save(){
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+function show(msg){
+  alertBox.textContent = msg;
+  alertBox.classList.remove('hidden');
+  setTimeout(()=>alertBox.classList.add('hidden'),1500);
 }
 
-function uid(){
-  return Math.random().toString(36).slice(2);
-}
+function clamp(n){ return Math.max(0,Math.min(100,n)); }
 
-function clamp(n){
-  return Math.max(0, Math.min(100, n));
-}
-
-/* ---------- Actions ---------- */
-
-function addPerson(){
-  const name = nameInput.value.trim();
-  if(!name) return alertMsg('Enter a name');
-
-  let p = state.people.find(x => x.name.toLowerCase() === name.toLowerCase());
+function addPerson(name){
+  if(!name) return show("Enter a name");
+  let p = state.people.find(x=>x.name.toLowerCase()===name.toLowerCase());
   if(!p){
-    p = { id:uid(), name, score:0, focus:false, paused:false };
+    p={id:Date.now(),name,score:0,focus:false,paused:false};
     state.people.push(p);
   }
-
-  save();
-  render();
-  nameInput.value = '';
+  save(); render();
 }
 
-function changeScore(id, delta){
-  const p = state.people.find(x => x.id === id);
-  if(!p) return;
-  p.score = clamp(p.score + delta);
-  applyAutoFocus();
-  save();
-  render();
+function changeScore(id,delta){
+  const p = state.people.find(x=>x.id===id);
+  if(!p || p.paused) return;
+  p.score = clamp(p.score+delta);
+  autoFocus();
+  save(); render();
 }
 
 function toggleFocus(id){
-  const p = state.people.find(x => x.id === id);
+  const p = state.people.find(x=>x.id===id);
   if(!p) return;
-
-  if(!p.focus){
-    const focused = state.people.filter(x => x.focus);
-    if(focused.length >= FOCUS_LIMIT){
-      focused[0].focus = false;
-    }
-  }
-
-  p.focus = !p.focus;
-  save();
-  render();
+  p.focus=!p.focus;
+  enforceFocusLimit();
+  save(); render();
 }
 
 function togglePause(id){
-  const p = state.people.find(x => x.id === id);
-  p.paused = !p.paused;
-  save();
-  render();
+  const p = state.people.find(x=>x.id===id);
+  if(!p) return;
+  p.paused=!p.paused;
+  if(p.paused) p.focus=false;
+  save(); render();
 }
 
-function removePerson(id){
-  state.people = state.people.filter(p => p.id !== id);
-  save();
-  render();
+function remove(id){
+  state.people = state.people.filter(x=>x.id!==id);
+  save(); render();
+}
+
+function autoFocus(){
+  state.people
+    .filter(p=>p.score>=AUTO_FOCUS && !p.paused)
+    .forEach(p=>p.focus=true);
+  enforceFocusLimit();
+}
+
+function enforceFocusLimit(){
+  const focused = state.people.filter(p=>p.focus);
+  while(focused.length>FOCUS_LIMIT){
+    focused.shift().focus=false;
+  }
 }
 
 function runDecay(){
   state.people.forEach(p=>{
-    if(!p.focus && !p.paused){
-      p.score = clamp(p.score - 10);
-    }
+    if(!p.focus && !p.paused) p.score=clamp(p.score-10);
   });
-  save();
-  render();
+  save(); render(); show("Decay applied");
 }
-
-/* ---------- Logic ---------- */
-
-function applyAutoFocus(){
-  state.people.forEach(p=>{
-    if(p.score >= AUTO_FOCUS && !p.focus && !p.paused){
-      const focused = state.people.filter(x=>x.focus);
-      if(focused.length >= FOCUS_LIMIT){
-        focused[0].focus = false;
-      }
-      p.focus = true;
-    }
-  });
-}
-
-function prediction(score){
-  if(score >= 90) return '🔥 Very Likely';
-  if(score >= 70) return '🙂 Possible';
-  if(score >= 50) return '🤔 Unlikely';
-  return '❌ Very Unlikely';
-}
-
-/* ---------- UI ---------- */
 
 function render(){
-  peopleContainer.innerHTML = '';
+  peopleContainer.innerHTML='';
   state.people.forEach(p=>{
-    const card = document.createElement('div');
-    card.className = 'card';
-
-    card.innerHTML = `
+    const div=document.createElement('div');
+    div.className='card';
+    div.innerHTML=`
       <div class="row">
         <strong>${p.name} — ${p.score}%</strong>
-        ${p.focus ? '<span class="badge">FOCUS</span>' : ''}
+        ${p.focus?'<span class="badge">FOCUS</span>':''}
       </div>
-
-      <div class="progress">
-        <div class="bar" style="width:${p.score}%"></div>
-      </div>
-
+      <div class="progress"><div class="bar" style="width:${p.score}%"></div></div>
       <div class="controls-row">
-        <button class="action" onclick="changeScore('${p.id}',-10)">-10</button>
-        <button class="action" onclick="changeScore('${p.id}',10)">+10</button>
-        <button class="action" onclick="toggleFocus('${p.id}')">${p.focus?'Unfocus':'Focus'}</button>
-        <button class="action" onclick="togglePause('${p.id}')">${p.paused?'Active':'Pause'}</button>
-        <button class="action danger" onclick="removePerson('${p.id}')">Delete</button>
+        <button class="action" onclick="changeScore(${p.id},-10)">-10</button>
+        <button class="action" onclick="changeScore(${p.id},10)">+10</button>
+        <button class="action" onclick="toggleFocus(${p.id})">${p.focus?'Unfocus':'Focus'}</button>
+        <button class="action" onclick="togglePause(${p.id})">${p.paused?'Active':'Pause'}</button>
+        <button class="action danger" onclick="remove(${p.id})">Delete</button>
       </div>
-
-      <div class="prediction">Prediction: ${prediction(p.score)}</div>
     `;
-
-    peopleContainer.appendChild(card);
+    peopleContainer.appendChild(div);
   });
 }
 
-function alertMsg(msg){
-  alertBox.style.display='block';
-  alertBox.textContent = msg;
-  setTimeout(()=>alertBox.style.display='none',1500);
-}
+addBtn.onclick=()=>{ addPerson(nameInput.value); nameInput.value=''; }
+decayBtn.onclick=runDecay;
 
-/* ---------- Events ---------- */
-
-addBtn.onclick = addPerson;
-decayBtn.onclick = runDecay;
-
-/* ---------- Init ---------- */
-
-render();
+load(); render();
