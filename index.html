@@ -1,169 +1,209 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Rizz System — Version 1 (Phase A)</title>
-<!-- Tidy, simple styles similar to your screenshots -->
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>🔥 Rizz System — Version 1 (Phase A)</title>
+
 <style>
-  :root{
-    --bg:#000;
-    --card:#0f0f0f;
-    --pill:#0b0b0b;
-    --accent:#00dda0;
-    --muted:#9aa0a6;
-    --btn:#e9f2ff;
-    --danger:#ffb3b3;
-    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-  }
-  html,body{height:100%}
-  body{margin:0;background:var(--bg);color:#fff;line-height:1.2;padding:22px;}
-  h1{font-size:36px;margin:0 0 18px 0}
-  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-  input[type=text]{flex:1;padding:16px;border-radius:14px;border:0;background:#fff;color:#111;font-size:16px}
-  button{background:var(--btn);border-radius:14px;padding:10px 14px;border:0;font-weight:600;color:#0366d6;cursor:pointer}
-  .controls{margin:12px 0 18px 0;display:flex;gap:8px;flex-wrap:wrap}
-  .card{background:var(--card);border-radius:16px;padding:16px;margin:14px 0;box-shadow:0 6px 22px rgba(0,0,0,.5)}
-  .person-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-  .name{font-size:20px;font-weight:700}
-  .status{background:#222;border-radius:12px;padding:6px 10px;font-size:12px}
-  .progress-wrap{height:14px;background:#222;border-radius:10px;overflow:hidden;margin:10px 0}
-  .progress{height:100%;background:linear-gradient(90deg,var(--accent),#05dca4);width:0}
-  .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
-  .small-btn{padding:10px 14px;border-radius:14px;background:#fff;color:#0366d6;border:0;cursor:pointer}
-  .small-btn.danger{background:var(--danger)}
-  .pill{display:inline-block;padding:6px 10px;border-radius:14px;background:var(--accent);color:#00381f;font-weight:700;margin-left:12px}
-  .banner{background:#ffb238;color:#111;padding:12px;border-radius:12px;margin-bottom:12px}
-  .thumb{width:64px;height:64px;border-radius:8px;object-fit:cover;border:2px solid #222;margin-top:8px}
-  .muted{color:var(--muted);font-size:14px;margin-top:8px}
-  .footer-note{color:var(--muted);margin-top:18px}
-  .tiny{font-size:12px;color:var(--muted)}
-  .ocr-box{background:#000;padding:8px;border-radius:8px;margin-top:8px;border:1px solid #222}
-  .suggest{background:#081218;color:#9ef0d1;border-radius:10px;padding:8px;margin-top:8px}
-  @media(min-width:880px){body{max-width:780px;margin:0 auto}}
+body {
+  margin: 0;
+  background: #000;
+  color: #fff;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont;
+}
+
+.container {
+  max-width: 420px;
+  margin: auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 28px;
+  margin-bottom: 12px;
+}
+
+input {
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  border: none;
+  margin-bottom: 10px;
+}
+
+button {
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: none;
+  font-weight: 600;
+  margin: 4px 4px 4px 0;
+}
+
+.primary { background: #e5f0ff; }
+.secondary { background: #1e1e1e; color: #8ab4ff; }
+.warn { background: #ffb300; color: #000; }
+.danger { background: #ff6b6b; color: #000; }
+.focus { background: #00e676; color: #000; }
+
+.card {
+  background: #111;
+  border-radius: 16px;
+  padding: 14px;
+  margin-top: 16px;
+}
+
+.progress {
+  height: 10px;
+  background: #333;
+  border-radius: 6px;
+  overflow: hidden;
+  margin: 8px 0;
+}
+
+.bar {
+  height: 100%;
+  background: linear-gradient(90deg,#00e676,#00c853);
+}
+
+.thumb {
+  width: 80px;
+  border-radius: 8px;
+  margin-top: 8px;
+}
+.small {
+  font-size: 13px;
+  color: #aaa;
+}
 </style>
 </head>
+
 <body>
+<div class="container">
+  <h1>🔥 Rizz System — Version 1 (Phase A)</h1>
 
-<h1>🔥 Rizz System — Version 1 (Phase A)</h1>
+  <input id="nameInput" placeholder="Add name (e.g. Charity)" />
+  <button class="primary" id="addBtn">Add / Update</button>
+  <button class="secondary" id="decayBtn">Run Decay (test)</button>
 
-<!-- notifications -->
-<div id="banner" style="display:none" class="banner"></div>
-
-<div class="row">
-  <input id="nameInput" type="text" placeholder="Add name (e.g. Charity)" />
-  <button id="addBtn">Add / Update</button>
+  <div id="list"></div>
 </div>
 
-<div class="controls">
-  <button id="decayBtn">Run Decay (test)</button>
-  <div class="tiny">Tip: +10 / -10 clamps to 0..100. Focus limit = 2. Auto-focus at ≥90%. Decay reduces score by 10 every 2 days (stored locally).</div>
-</div>
+<input type="file" id="fileInput" accept="image/*" hidden />
 
-<div id="peopleList"></div>
-
-<div class="footer-note">Saved locally in your browser (localStorage). Screenshots and OCR are processed in-browser.</div>
-
-<!-- Tesseract (optional OCR). We'll lazy-load only when user uses OCR to reduce initial load -->
 <script>
-/*
-  Rizz System — Version 1 (Phase A)
-  - Person structure stored in localStorage under 'rizz_persons'
-    { id, name, score, status:'active'|'paused', isFocus:boolean, focusAt:number|null, screenshots: [dataURL], updatedAt:number }
-  - Global limits:
-    - autoFocusThreshold = 90
-    - maxFocus = 2
-    - decayAmount = 10 per decayPeriodDays (2)
-*/
-(() => {
-  // Config
-  const STORAGE_KEY = 'rizz_persons_v1';
-  const LAST_DECAY_KEY = 'rizz_last_decay_v1';
-  const autoFocusThreshold = 90;
-  const maxFocus = 2;
-  const decayAmount = 10;
-  const decayPeriodDays = 2; // decay every 2 days
-  const maxScreensPerPerson = 6;
+const STORAGE_KEY = "rizz_v1_phaseA";
+let data = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+let attachTarget = null;
 
-  // state
-  let persons = loadPersons();
-  let bannerTimeout = null;
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
 
-  // DOM
-  const nameInput = document.getElementById('nameInput');
-  const addBtn = document.getElementById('addBtn');
-  const peopleList = document.getElementById('peopleList');
-  const decayBtn = document.getElementById('decayBtn');
-  const banner = document.getElementById('banner');
+function clamp(v) {
+  return Math.max(0, Math.min(100, v));
+}
 
-  addBtn.onclick = () => {
-    const name = (nameInput.value || '').trim();
-    if(!name){ showBanner('Please enter a name', true); return; }
-    addOrUpdatePerson(name);
-    nameInput.value = '';
+function autoFocus() {
+  const focused = Object.values(data).filter(p => p.focus);
+  const candidates = Object.entries(data)
+    .filter(([_,p]) => p.score >= 90 && !p.focus)
+    .sort((a,b)=>b[1].score-a[1].score);
+
+  while (focused.length < 2 && candidates.length) {
+    candidates.shift()[1].focus = true;
+    focused.push(true);
+  }
+}
+
+function decay() {
+  Object.values(data).forEach(p => {
+    p.score = clamp(p.score - 10);
+  });
+  autoFocus();
+  save();
+  render();
+}
+
+function addPerson(name) {
+  if (!name) return;
+  if (!data[name]) {
+    data[name] = { score: 0, focus: false, img: null };
+  }
+  save();
+  render();
+}
+
+function updateScore(name, delta) {
+  data[name].score = clamp(data[name].score + delta);
+  autoFocus();
+  save();
+  render();
+}
+
+function toggleFocus(name) {
+  data[name].focus = !data[name].focus;
+  autoFocus();
+  save();
+  render();
+}
+
+function attachImage(name) {
+  attachTarget = name;
+  document.getElementById("fileInput").click();
+}
+
+document.getElementById("fileInput").addEventListener("change", e => {
+  const file = e.target.files[0];
+  if (!file || !attachTarget) return;
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    data[attachTarget].img = reader.result;
+    save();
     render();
   };
+  reader.readAsDataURL(file);
+});
 
-  decayBtn.onclick = () => {
-    runDecay(true); // force test
-    render();
-  };
+function render() {
+  const list = document.getElementById("list");
+  list.innerHTML = "";
 
-  // utilities
-  function uid(){ return Math.random().toString(36).slice(2,9); }
-  function now(){ return Date.now(); }
+  Object.entries(data).forEach(([name,p]) => {
+    const card = document.createElement("div");
+    card.className = "card";
 
-  function loadPersons(){
-    try{
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if(raw) return JSON.parse(raw);
-    }catch(e){}
-    return [];
-  }
-  function persist(){
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(persons));
-  }
+    card.innerHTML = `
+      <strong>${name} — ${p.score}%</strong>
+      ${p.focus ? '<span class="focus" style="margin-left:8px;padding:4px 8px;border-radius:8px;">FOCUS</span>' : ''}
+      <div class="progress">
+        <div class="bar" style="width:${p.score}%"></div>
+      </div>
 
-  function showBanner(txt, danger=false, ttl=3500){
-    banner.textContent = txt;
-    banner.style.display = 'block';
-    banner.style.background = danger ? '#ffb238' : '#ffb238';
-    if(bannerTimeout) clearTimeout(bannerTimeout);
-    bannerTimeout = setTimeout(()=> banner.style.display='none', ttl);
-  }
+      <button class="secondary" onclick="updateScore('${name}',-10)">-10</button>
+      <button class="secondary" onclick="updateScore('${name}',10)">+10</button>
+      <button class="secondary" onclick="toggleFocus('${name}')">
+        ${p.focus ? 'Unfocus' : 'Focus'}
+      </button>
+      <button class="secondary" onclick="attachImage('${name}')">📷 Attach</button>
+      <button class="danger" onclick="delete data['${name}']; save(); render();">Delete</button>
 
-  // add or update person (by name)
-  function addOrUpdatePerson(name){
-    let p = persons.find(x => x.name.toLowerCase() === name.toLowerCase());
-    if(p){
-      p.updatedAt = now();
-      showBanner('Updated '+p.name);
-    } else {
-      p = {
-        id: uid(),
-        name,
-        score: 0,
-        status: 'active',
-        isFocus: false,
-        focusAt: null,
-        screenshots: [],
-        updatedAt: now()
-      };
-      persons.push(p);
-      showBanner('Added '+name);
-    }
-    persist();
-    checkAutoFocus();
-  }
+      <div class="small">Prediction: ${p.score >= 90 ? 'Most Likely' : p.score >= 70 ? 'Possible' : 'Low'}</div>
+      ${p.img ? `<img src="${p.img}" class="thumb"/>` : ''}
+    `;
+    list.appendChild(card);
+  });
+}
 
-  // remove person
-  function deletePerson(id){
-    persons = persons.filter(p => p.id !== id);
-    persist();
-    render();
-  }
+document.getElementById("addBtn").onclick = () => {
+  addPerson(document.getElementById("nameInput").value.trim());
+  document.getElementById("nameInput").value = "";
+};
 
-  // clamp
-  function clampScore(s){
-    if(s < 0) return 0;
-    if(s >
+document.getElementById("decayBtn").onclick = decay;
+
+render();
+</script>
+</body>
+</html>
