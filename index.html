@@ -1,219 +1,319 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>🔥 Rizz System — Version 1 (Phase A)</title>
-
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Rizz System — Version 1 (Phase A)</title>
 <style>
-body {
-  background:#000;
-  color:#fff;
-  font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto;
-  margin:0;
-  padding:20px;
-}
-h1 { font-size:28px; margin-bottom:15px; }
-input,button {
-  border:none;
-  border-radius:14px;
-  padding:14px;
-  font-size:15px;
-}
-input { width:100%; margin-bottom:10px; }
-button {
-  background:#e6e6e6;
-  margin:5px 4px;
-}
-.primary { background:#dbeafe; }
-.danger { background:#ff7b7b; }
-.focus { background:#22c55e; color:#000; font-weight:600; }
-.card {
-  background:#111;
-  border-radius:18px;
-  padding:15px;
-  margin-top:15px;
-}
-.bar {
-  height:12px;
-  background:#222;
-  border-radius:10px;
-  overflow:hidden;
-}
-.fill {
-  height:100%;
-  background:linear-gradient(90deg,#00ffa3,#00c6ff);
-}
-.badge {
-  padding:6px 12px;
-  border-radius:12px;
-  font-size:13px;
-}
-.gray { background:#333; }
-.green { background:#22c55e; color:#000; }
-.thumb {
-  width:70px;
-  border-radius:8px;
-  margin-top:8px;
-}
-small { color:#aaa; }
+  :root{
+    --bg:#050505; --card:#0f1616; --muted:#9aa1a6; --accent:#06d6a0; --danger:#ff6b6b;
+    --pill:#e9eef3; --btn-bg:#e6f0ff; --btn-text:#0560b9;
+  }
+  html,body{height:100%;margin:0;background:var(--bg);color:#fff;font-family:Inter,system-ui,Arial;}
+  .wrap{max-width:820px;margin:0 auto;padding:24px;}
+  h1{font-size:34px;margin:0 0 12px 0;line-height:1.02}
+  .row{display:flex;gap:10px;flex-wrap:wrap;}
+  input[type="text"]{flex:1;padding:14px;border-radius:14px;border:0;background:#fff;color:#111;font-size:16px}
+  button{background:var(--btn-bg);color:var(--btn-text);padding:10px 14px;border-radius:12px;border:0;cursor:pointer}
+  .muted{color:var(--muted);font-size:14px;margin:10px 0}
+  .banner{background:#f7b500;padding:12px;border-radius:10px;color:#111;margin:12px 0}
+  .cards{margin-top:18px;display:flex;flex-direction:column;gap:18px}
+  .card{background:var(--card);padding:16px;border-radius:14px}
+  .title{display:flex;justify-content:space-between;align-items:center;gap:12px}
+  .name{font-weight:700;font-size:20px}
+  .badge{background:#2b2b2b;padding:6px 10px;border-radius:10px;color:#ddd;font-size:13px}
+  .progress{height:12px;background:#262626;border-radius:999px;margin:10px 0;overflow:hidden}
+  .bar{height:100%;background:linear-gradient(90deg,var(--accent),#00d18b);width:0%}
+  .controls{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px}
+  .control-btn{background:#0b1220;color:#9fb8ff;padding:10px 14px;border-radius:14px;border:0;cursor:pointer}
+  .danger{background:var(--danger);color:#fff;padding:10px 14px;border-radius:14px;border:0}
+  .attach-thumb{width:80px;height:120px;border-radius:8px;object-fit:cover;margin-top:12px;border:2px solid #111}
+  .prediction{margin-top:12px;color:var(--muted)}
+  .footer-tip{color:var(--muted);margin:22px 0 40px 0}
+  /* mobile spacing */
+  @media (max-width:520px){ .row{flex-direction:column} button{width:100%} .controls button{min-width:80px} }
 </style>
 </head>
-
 <body>
+<div class="wrap">
+  <h1>🔥 Rizz System — Version 1 (Phase A)</h1>
 
-<h1>🔥 Rizz System — Version 1 (Phase A)</h1>
+  <div id="banner" style="display:none" class="banner"></div>
 
-<input id="nameInput" placeholder="Add name (e.g. Charity)" />
-<button class="primary" onclick="addPerson()">Add / Update</button>
-<button onclick="runDecay()">Run Decay (test)</button>
+  <div class="row" style="align-items:center;margin:12px 0 8px 0">
+    <input id="nameInput" type="text" placeholder="Add name (e.g. Charity)" />
+    <button id="addBtn">Add / Update</button>
+  </div>
 
-<div id="list"></div>
+  <div style="margin:8px 0 0 0" class="row">
+    <button id="decayBtn">Run Decay (test)</button>
+    <button id="clearAllBtn" style="background:#111;color:#fff;border-radius:12px;padding:10px 14px">Clear All</button>
+  </div>
 
-<small>
-+10 / -10 clamps to 0–100.  
-Auto-focus at ≥90%.  
-Focus limit = 2.  
-Decay −10 every 2 days.  
-Saved locally.
-</small>
+  <div class="muted">Tip: +10/-10 clamps to 0..100. Focus limit = 2. Auto-focus at ≥ 90%. Decay reduces score by 10 every 2 days (stored locally).</div>
+
+  <div id="cards" class="cards"></div>
+
+  <div class="footer-tip">Saved locally in your browser (localStorage). Screenshots attached per-person (thumbnails). OCR and external integrations in Phase B.</div>
+</div>
+
+<!-- hidden filefield reused -->
+<input id="filePicker" type="file" accept="image/*" style="display:none" />
 
 <script>
-let data = JSON.parse(localStorage.getItem("rizz_v1")) || {};
+/*
+Rizz System v1 (Phase A)
+- single-file app (drop into index.html)
+- localStorage key: rizz_v1
+- config below
+*/
 
-function save() {
-  localStorage.setItem("rizz_v1", JSON.stringify(data));
-}
+const STORAGE_KEY = 'rizz_v1';
+const config = {
+  focusLimit: 2,
+  autoFocusThreshold: 90,
+  decayDays: 2,    // decay every 2 days
+  decayAmount: 10,
+  step: 10
+};
 
-function addPerson() {
-  const name = nameInput.value.trim();
-  if (!name) return;
-  if (!data[name]) {
-    data[name] = {
-      score: 0,
-      focus: false,
-      paused: false,
-      updated: Date.now(),
-      shots: []
-    };
+/* state shape:
+{ people: [{id,name,score,active,focus,focusAt,createdAt,attachBase64}], lastDecay: timestamp }
+*/
+let state = loadState();
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return { people: [], lastDecay: null };
+    return JSON.parse(raw);
+  }catch(e){
+    console.warn('loadState fail',e);
+    return { people: [], lastDecay: null };
   }
-  save();
+}
+
+function saveState(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function uid(){ return 'id_'+Math.random().toString(36).slice(2,9) }
+
+/* UI helpers */
+const cardsEl = document.getElementById('cards');
+const banner = document.getElementById('banner');
+const nameInput = document.getElementById('nameInput');
+const addBtn = document.getElementById('addBtn');
+const decayBtn = document.getElementById('decayBtn');
+const clearAllBtn = document.getElementById('clearAllBtn');
+const filePicker = document.getElementById('filePicker');
+
+function showBanner(text,ms=3000){
+  banner.textContent = text;
+  banner.style.display = 'block';
+  if(ms>0) setTimeout(()=> banner.style.display='none', ms);
+}
+
+function clamp(v){ return Math.max(0, Math.min(100, v|0)); }
+
+function findPersonIdByName(name){
+  return state.people.find(p => p.name.toLowerCase() === name.toLowerCase())?.id;
+}
+
+/* add or update person */
+addBtn.addEventListener('click', ()=>{
+  const name = nameInput.value.trim();
+  if(!name){ showBanner('Please enter a name',2500); return; }
+  let p = state.people.find(x => x.name.toLowerCase()===name.toLowerCase());
+  if(p){
+    showBanner('Updated '+name,1500);
+    p.updatedAt = Date.now();
+  } else {
+    p = {
+      id: uid(), name, score:0, active:true, focus:false,
+      createdAt: Date.now(), focusAt: null, attachBase64: null
+    };
+    state.people.unshift(p); // newest first
+    showBanner('Added '+name,1200);
+  }
+  saveState();
   render();
-  nameInput.value="";
-}
+  nameInput.value='';
+});
 
-function setScore(name, delta) {
-  const p = data[name];
-  if (p.paused) return;
-  p.score = Math.max(0, Math.min(100, p.score + delta));
-  p.updated = Date.now();
-  autoFocus();
-  save();
+/* clear all */
+clearAllBtn.addEventListener('click', ()=>{
+  if(!confirm('Clear all saved people?')) return;
+  state = { people: [], lastDecay: null };
+  saveState();
   render();
-}
+});
 
-function autoFocus() {
-  const focused = Object.values(data).filter(p=>p.focus).length;
-  Object.entries(data).forEach(([name,p])=>{
-    if (p.score >= 90 && !p.focus && focused < 2) {
-      p.focus = true;
-    }
-  });
-}
+/* run decay (manual or automatic) */
+decayBtn.addEventListener('click', ()=>{
+  runDecay(true);
+});
 
-function toggleFocus(name) {
-  const focused = Object.values(data).filter(p=>p.focus).length;
-  if (!data[name].focus && focused >= 2) return;
-  data[name].focus = !data[name].focus;
-  save();
-  render();
-}
-
-function togglePause(name) {
-  data[name].paused = !data[name].paused;
-  save();
-  render();
-}
-
-function del(name) {
-  delete data[name];
-  save();
-  render();
-}
-
-function runDecay() {
+/* perform decay if 2+ days passed since lastDecay */
+function runDecay(force=false){
   const now = Date.now();
-  Object.values(data).forEach(p=>{
-    const days = (now - p.updated) / (1000*60*60*24);
-    if (days >= 2 && !p.paused) {
-      p.score = Math.max(0, p.score - 10);
-      p.updated = now;
-      if (p.score < 90) p.focus = false;
+  if(!force && state.lastDecay){
+    const diffDays = (now - state.lastDecay) / (1000*60*60*24);
+    if(diffDays < config.decayDays) return; // not time yet
+  }
+  // apply decay
+  state.people.forEach(p=>{
+    if(!p.active) return;
+    p.score = clamp(p.score - config.decayAmount);
+    // optionally remove focus if score dropped far? keep current logic
+    if(p.score < config.autoFocusThreshold && p.focus){
+      // remove focus if below threshold, but keep it optional; here we keep focus but it no longer auto-selected
     }
   });
-  save();
+  state.lastDecay = now;
+  saveState();
+  showBanner('Decay applied',1500);
   render();
 }
 
-function attach(name, file) {
+/* auto-focus enforcement: when a person's score reaches >= threshold, give focus and enforce limit */
+function maybeAutoFocusFor(p){
+  if(p.score >= config.autoFocusThreshold){
+    // set focusAt now
+    p.focus = true;
+    p.focusAt = Date.now();
+    enforceFocusLimit();
+    saveState();
+    showBanner('Auto-Focus: '+p.name+' reached '+p.score+'%',2000);
+  }
+}
+
+/* enforce max focus count by removing oldest focused persons */
+function enforceFocusLimit(){
+  const focused = state.people.filter(x=>x.focus).sort((a,b)=> (a.focusAt||0) - (b.focusAt||0));
+  while(focused.length > config.focusLimit){
+    const oldest = focused.shift();
+    if(oldest){ oldest.focus = false; oldest.focusAt = null; showBanner('Focus limit reached — removed oldest focus',2000); }
+  }
+}
+
+/* Event delegation for card controls */
+cardsEl.addEventListener('click', (e)=>{
+  const el = e.target.closest('[data-action]');
+  if(!el) return;
+  const action = el.dataset.action;
+  const id = el.closest('.card')?.dataset.id;
+  if(!id) return;
+  const person = state.people.find(p => p.id === id);
+  if(!person) return;
+
+  if(action === 'inc'){ person.score = clamp(person.score + config.step); maybeAutoFocusFor(person); }
+  if(action === 'dec'){ person.score = clamp(person.score - config.step); }
+  if(action === 'focus'){ person.focus = true; person.focusAt = Date.now(); enforceFocusLimit(); showBanner(person.name+' set to Focus',1200); }
+  if(action === 'unfocus'){ person.focus = false; person.focusAt = null; showBanner(person.name+' unfocused',1200); }
+  if(action === 'pause'){ person.active = !person.active; showBanner(person.name + (person.active? ' resumed':' paused'),1000); }
+  if(action === 'delete'){ if(confirm('Delete '+person.name+'?')){ state.people = state.people.filter(p=>p.id!==id); showBanner('Deleted '+person.name,1000); } }
+  if(action === 'attach'){ filePicker.dataset.targetId = id; filePicker.click(); }
+
+  saveState(); render();
+});
+
+/* file attach handling */
+filePicker.addEventListener('change', async (ev)=>{
+  const f = ev.target.files && ev.target.files[0];
+  const id = filePicker.dataset.targetId;
+  if(!f || !id) return;
+  const p = state.people.find(x => x.id === id);
+  if(!p) return;
+  // read as base64
   const reader = new FileReader();
-  reader.onload = e => {
-    data[name].shots.push(e.target.result);
-    save();
+  reader.onload = function(e){
+    p.attachBase64 = e.target.result;
+    saveState();
     render();
-  };
-  reader.readAsDataURL(file);
+  }
+  reader.readAsDataURL(f);
+  // clear input so same file can be reselected later
+  filePicker.value = '';
+});
+
+/* utility: friendly prediction text */
+function predictLabel(score){
+  // simple mapping example (tweak as needed)
+  if(score >= 110) return 'Most Likely'; // if you later use extended scoring
+  if(score >= 95) return 'Very Likely';
+  if(score >= 80) return 'Likely';
+  if(score >= 60) return 'Possible';
+  if(score >= 40) return 'Unlikely';
+  return 'Very Unlikely';
 }
 
-function prediction(score) {
-  if (score >= 90) return "Most Likely";
-  if (score >= 70) return "Possible";
-  return "Unlikely";
-}
+/* create card DOM */
+function render(){
+  cardsEl.innerHTML = '';
+  // Banner: show if no one focused
+  const anyFocus = state.people.some(p=>p.focus);
+  if(!anyFocus && state.people.length) {
+    // show small persistent info until dismissed
+    banner.style.display='block';
+    banner.textContent = 'ℹ No one is Focus — system will auto-select when someone reaches 90%';
+    setTimeout(()=>banner.style.display='none',2500);
+  }
 
-function render() {
-  list.innerHTML="";
-  Object.entries(data).forEach(([name,p])=>{
-    const card = document.createElement("div");
-    card.className="card";
-
+  state.people.forEach(p=>{
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.dataset.id = p.id;
     card.innerHTML = `
-      <b>${name} — ${p.score}%</b>
-      <span class="badge ${p.focus?"green":"gray"}">
-        ${p.focus?"FOCUS":p.paused?"PAUSED":"ACTIVE"}
-      </span>
-
-      <div class="bar"><div class="fill" style="width:${p.score}%"></div></div>
-
-      <div>
-        <button onclick="setScore('${name}',-10)">-10</button>
-        <button onclick="setScore('${name}',10)">+10</button>
-        <button onclick="toggleFocus('${name}')">${p.focus?"Unfocus":"Focus"}</button>
-        <button onclick="togglePause('${name}')">${p.paused?"Active":"Pause"}</button>
-        <button class="danger" onclick="del('${name}')">Delete</button>
-        <label>
-          <button>📷 Attach</button>
-          <input type="file" hidden accept="image/*"
-            onchange="attach('${name}',this.files[0])">
-        </label>
+      <div class="title">
+        <div>
+          <div class="name">${escapeHtml(p.name)} — ${p.score}%</div>
+          <div class="muted" style="margin-top:6px">${p.updatedAt ? 'Updated '+timeAgo(p.updatedAt) : ''}</div>
+        </div>
+        <div>
+          ${p.focus ? '<div style="background:var(--accent);padding:8px 12px;border-radius:12px;color:#021" class="badge">FOCUS</div>' : (p.active?'<div class="badge">ACTIVE</div>':'<div class="badge">PAUSED</div>')}
+        </div>
       </div>
 
-      <small>Prediction: ${prediction(p.score)}</small>
+      <div class="progress"><div class="bar" style="width:${p.score}%"></div></div>
+
+      <div class="controls">
+        <button data-action="dec" class="control-btn">-10</button>
+        <button data-action="inc" class="control-btn">+10</button>
+        ${p.focus ? '<button data-action="unfocus" class="control-btn">Unfocus</button>' : '<button data-action="focus" class="control-btn">Focus</button>'}
+        <button data-action="pause" class="control-btn">${p.active? 'Pause':'Resume'}</button>
+        <button data-action="attach" class="control-btn">📷 Attach</button>
+        <button data-action="delete" class="danger">Delete</button>
+      </div>
+
+      ${p.attachBase64 ? `<img class="attach-thumb" src="${p.attachBase64}" />` : ''}
+      <div class="prediction">Prediction: ${Math.round(p.score*1.03)} — ${predictLabel(p.score)}</div>
     `;
-
-    p.shots.forEach(s=>{
-      const img = document.createElement("img");
-      img.src = s;
-      img.className="thumb";
-      card.appendChild(img);
-    });
-
-    list.appendChild(card);
+    cardsEl.appendChild(card);
   });
 }
 
-render();
-</script>
+/* helpers */
+function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;') }
+function timeAgo(ts){
+  const delta = Math.floor((Date.now()-ts)/1000);
+  if(delta < 60) return delta + 's';
+  if(delta < 3600) return Math.floor(delta/60)+'m';
+  if(delta < 86400) return Math.floor(delta/3600)+'h';
+  return Math.floor(delta/86400)+'d';
+}
 
+/* initial render and run automatic decay check */
+(function init(){
+  // ensure all scores clamped
+  state.people.forEach(p => p.score = clamp(p.score));
+  // enforce focus limit on load
+  enforceFocusLimit();
+  // run decay if needed
+  runDecay(false);
+  render();
+})();
+
+</script>
 </body>
 </html>
