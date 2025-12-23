@@ -3,641 +3,444 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Rizz System — Version 1 + Screenshot Rizz</title>
-
-<!-- Tesseract.js (client-side OCR) -->
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@v4.0.2/dist/tesseract.min.js"></script>
-
+<title>Rizz System — Version1 + Predictions (Phase A)</title>
 <style>
 :root{
-  --bg:#000; --fg:#fff; --muted:#8c8c8c; --accent:#00d18a; --pill:#222; --warn:#ffb300;
-  --card:#0b0b0b;
+  --bg:#000; --fg:#fff; --muted:#9aa0a6; --accent:#00d18a; --warn:#ffb300; --card:#0c0c0c;
 }
-html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;}
-.wrap{max-width:980px;margin:18px auto;padding:16px}
-h1 { font-size:28px; margin:0 0 8px; }
-.headerNote{color:var(--muted); font-size:13px; margin-bottom:12px}
-
-.controls{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
-.inputText{flex:1;padding:12px;border-radius:12px;border:0;background:#111;color:var(--fg);font-size:16px}
-.btn{padding:10px 14px;border-radius:12px;border:0;background:#e9eef5;color:#0a2b4f;font-weight:700;cursor:pointer}
-.small{padding:8px 10px;font-size:14px}
-.banner{display:none;background:var(--warn);color:#000;padding:12px;border-radius:12px;margin-bottom:12px}
-.grid{display:grid;grid-template-columns:1fr 420px;gap:18px}
-@media (max-width:980px){ .grid{grid-template-columns:1fr} }
-
-.card{background:transparent;padding:8px;border-radius:10px}
-.sectionTitle{font-weight:700;margin-bottom:8px}
-.list{margin-top:8px}
-.person{padding:10px;border-radius:10px;background:transparent;border-bottom:1px solid #161616;margin-bottom:8px}
-.row{display:flex;align-items:center;gap:8px;justify-content:space-between}
-.name{font-weight:700}
-.badge{padding:6px 10px;border-radius:10px;background:var(--pill);font-weight:700}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:Inter,system-ui,Arial}
+.wrap{max-width:920px;margin:18px auto;padding:14px}
+h1{font-size:28px;margin:0 0 10px}
+.controls{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}
+.input{flex:1;padding:12px;border-radius:12px;border:none;background:#111;color:var(--fg)}
+.btn{padding:10px 14px;border-radius:12px;border:none;background:#e6eef6;color:#002b5b;font-weight:700;cursor:pointer}
+.small{padding:8px 10px}
+.banner{display:none;padding:12px;border-radius:10px;background:var(--warn);color:#000;margin-bottom:12px}
+.list{margin-top:12px}
+.person{background:var(--card);padding:12px;border-radius:12px;margin-bottom:12px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.title{font-weight:800;font-size:18px}
+.badge{padding:6px 10px;border-radius:12px;background:#222;color:#ddd;font-weight:700}
 .badge.focus{background:var(--accent);color:#001}
-.progressWrap{height:12px;background:#111;border-radius:10px;overflow:hidden;margin:8px 0}
-.progress{height:100%;background:linear-gradient(90deg,var(--accent),#00f0b0);width:0;transition:width .25s}
-.actionRow{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-.actionBtn{background:#111;padding:9px 12px;border-radius:10px;border:1px solid #222;color:#9fcfff;cursor:pointer}
-.smallText{color:var(--muted);font-size:13px;margin-top:10px}
-.uploader{background:#0b0b0b;padding:12px;border-radius:12px;border:1px dashed #222}
-.ocrOutput{white-space:pre-wrap;background:#050505;padding:10px;border-radius:8px;margin-top:8px}
-.progressLine{height:8px;background:#222;border-radius:8px;overflow:hidden;margin-top:8px}
-.progressFill{height:100%;background:linear-gradient(90deg,#3182ce,#00d18a);width:0;transition:width .15s}
-.templateBox{background:#070707;padding:10px;border-radius:8px;margin-top:8px}
-.linkBtn{background:#0a84ff;padding:10px;border-radius:10px;color:#fff;text-decoration:none;display:inline-block}
-.footer{color:var(--muted);font-size:13px;margin-top:14px}
+.progressWrap{height:12px;background:#222;border-radius:999px;overflow:hidden;margin:8px 0}
+.progress{height:100%;background:linear-gradient(90deg,var(--accent),#00f2b1);width:0;transition:width .25s ease}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.action{padding:8px 10px;border-radius:10px;background:#fff;color:#003a8c;border:none;cursor:pointer;font-weight:700}
+.screenshotThumb{height:48px;width:48px;object-fit:cover;border-radius:8px;margin-left:8px;border:2px solid #222}
+.predPanel{background:#07110a;padding:12px;border-radius:10px;margin-top:12px}
+.predItem{display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px dashed #122}
+.predLabel{padding:4px 8px;border-radius:8px;font-weight:700}
+.most{background:#00ffb3;color:#001}
+.potential{background:#ffd86a;color:#000}
+.low{background:#666;color:#ddd}
+.muted{color:var(--muted);font-size:13px;margin-top:12px}
+.footer{height:48px}
+@media(max-width:520px){ .title{font-size:16px} .btn{padding:8px 10px} }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>🔥 Rizz System — Version 1 (Screenshot Rizz)</h1>
-  <div class="headerNote">Stable Rizz core + screenshot OCR to extract names/messages and create quick WhatsApp replies. Your images are processed in your browser.</div>
+  <h1>🔥 Rizz System — Version 1 (Predictions)</h1>
 
   <div id="banner" class="banner"></div>
 
   <div class="controls">
-    <input id="addName" class="inputText" placeholder="Add person (name) to Rizz system"/>
+    <input id="nameIn" class="input" placeholder="Add name (e.g. Charity)" />
     <button id="addBtn" class="btn">Add / Update</button>
-    <button id="clearBtn" class="btn small">Clear All</button>
-    <button id="exportPeople" class="btn small" style="display:none">Export (disabled)</button>
+    <button id="decayBtn" class="btn small">Run Decay (test)</button>
+    <button id="predToggle" class="btn small">Show Predictions</button>
+    <button id="exportBtn" class="btn small" style="display:none">Export</button>
   </div>
 
-  <div class="grid">
-    <!-- LEFT: Rizz System -->
-    <div>
-      <div class="card">
-        <div class="sectionTitle">Rizz Dashboard (Version 1 core)</div>
-        <div id="rizzList" class="list"></div>
-        <div class="smallText">Tip: Auto-focus triggers at 90% and max 2 Focus are enforced. Scores decay every 2 days.</div>
-      </div>
+  <div id="list" class="list"></div>
 
-      <div class="card" style="margin-top:14px">
-        <div class="sectionTitle">Quick Controls</div>
-        <div class="actionRow">
-          <button id="decayBtn" class="actionBtn">Run Decay (test)</button>
-          <button id="autoRankBtn" class="actionBtn">Auto Rank (Top 2)</button>
-          <button id="suggestTextBtn" class="actionBtn">Suggest Texts for All</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- RIGHT: Screenshot OCR & Actions -->
-    <div>
-      <div class="card uploader">
-        <div class="sectionTitle">Upload Screenshot</div>
-        <input id="screenshotFile" type="file" accept="image/*" />
-        <div id="ocrControls" style="margin-top:8px">
-          <button id="startOcr" class="btn small">Run OCR</button>
-          <button id="clearOcr" class="btn small">Clear</button>
-        </div>
-
-        <div id="ocrStatus" class="smallText"></div>
-        <div class="progressLine" style="display:none"><div id="ocrProgress" class="progressFill"></div></div>
-
-        <div id="ocrImagePreview" style="margin-top:10px"></div>
-        <div id="ocrText" class="ocrOutput" style="display:none"></div>
-
-        <div id="parsedResults" style="margin-top:10px"></div>
-      </div>
-
-      <div class="card" style="margin-top:12px">
-        <div class="sectionTitle">Reply Templates</div>
-        <div id="templatesArea" class="templateBox">No templates yet — run OCR on a screenshot or click "Suggest Texts for All".</div>
-      </div>
-    </div>
+  <div id="predictions" class="predPanel" style="display:none">
+    <h3 style="margin:0 0 8px">Predictions — Who is most likely to become serious</h3>
+    <div id="predList"></div>
+    <div class="muted">Prediction score = progress% + status bonus + stability bonus − conflict penalty</div>
   </div>
 
-  <div class="footer">Saved as "Version 1 Rizz" baseline. To connect to WhatsApp the app opens <code>wa.me</code> with your message (you must confirm send).</div>
+  <div class="muted">Tip: Focus limit = 2. Auto-focus at ≥ 90%. You can attach small screenshots per person (thumbnails only).</div>
+
+  <div class="footer"></div>
 </div>
 
 <script>
-/* ===========================
-   Rizz System core (Version 1 baseline)
-   - store in localStorage
-   - people: { id, name, score (0..100), status:'active'|'paused', focused (bool), focusedAt (ts), lastTickAt (ms) }
-   - auto-focus >= 90, max 2 focus (remove oldest)
-   - decay computed in steps of 2 days (applied on demand or after actions)
-   =========================== */
-
-const STORAGE_KEY = 'rizz_v1_full';
-const DECAY_DAYS = 2;
-const DECAY_MS = DECAY_DAYS * 24*60*60*1000;
-const DECAY_AMOUNT = 10;
+/* ---------- Config ---------- */
+const STORAGE_KEY = "rizz_v1_predictions";
 const FOCUS_LIMIT = 2;
+const DECAY_DAYS = 2;
+const DECAY_AMOUNT = 10;
 const AUTO_FOCUS_THRESHOLD = 90;
+const MAX_HISTORY = 6; // track last N scores for stability
+const SAVE_DEBOUNCE = 200;
 
-let rizz = { people: [], lastDecayAt: Date.now() };
+/* ---------- State ---------- */
+let store = { people: [], lastDecayAt: Date.now() };
 
-// safe load
-function loadRizz(){
+/* ---------- Util ---------- */
+const now = ()=>Date.now();
+const clamp = (n,min=0,max=100)=> Math.max(min,Math.min(max,Math.round(n)));
+const uid = ()=> Math.random().toString(36).slice(2,9);
+
+function load(){
   try{
     const raw = localStorage.getItem(STORAGE_KEY);
     if(raw){
       const parsed = JSON.parse(raw);
-      if(parsed && Array.isArray(parsed.people)) rizz = parsed;
+      if(parsed && Array.isArray(parsed.people)) store = parsed;
     }
-  }catch(e){ console.warn("load failed", e); rizz = { people: [], lastDecayAt: Date.now() }; }
-}
-function saveRizz(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(rizz)); }
-
-// helpers
-const uid = ()=> Math.random().toString(36).slice(2,9);
-const now = ()=> Date.now();
-const clamp = v => Math.max(0, Math.min(100, Math.round(v || 0)));
-
-function ensurePersonStructure(p){
-  p.id = p.id || uid();
-  p.name = String(p.name || '').trim();
-  p.score = clamp(p.score || 0);
-  p.status = p.status || 'active';
-  p.focused = !!p.focused;
-  p.focusedAt = p.focusedAt || (p.focused ? now() : null);
-  p.lastTickAt = p.lastTickAt || now();
-  return p;
-}
-
-/* Add or update person by name (case-insensitive) */
-function addOrUpdatePerson(name){
-  name = String(name || '').trim();
-  if(!name) return notify("Enter a name to add");
-  let found = rizz.people.find(p => p.name.toLowerCase() === name.toLowerCase());
-  if(found){
-    found.lastTickAt = now(); // refresh timestamp
-    notify("Updated " + found.name);
-  } else {
-    const p = ensurePersonStructure({ id: uid(), name, score: 0, status: 'active', focused: false, focusedAt: null });
-    rizz.people.push(p);
-    notify("Added " + p.name);
+  }catch(e){
+    console.warn("load error",e);
+    store = { people: [], lastDecayAt: Date.now() };
   }
-  saveRizz();
-  runPostChange();
+}
+function save(){
+  clearTimeout(save._t);
+  save._t = setTimeout(()=> {
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(store)); } catch(e){ console.warn('save failed', e); }
+  }, SAVE_DEBOUNCE);
 }
 
-/* Update score safely */
+/* ---------- Banner ---------- */
+const banner = document.getElementById('banner');
+function show(msg,ms=2600){
+  banner.style.display = 'block';
+  banner.textContent = msg;
+  clearTimeout(banner._t);
+  banner._t = setTimeout(()=> banner.style.display = 'none', ms);
+}
+
+/* ---------- People operations ---------- */
+function getById(id){ return store.people.find(p=>p.id===id); }
+function findByName(name){ return store.people.find(p => p.name.toLowerCase() === name.toLowerCase()); }
+
+function addOrUpdate(name){
+  if(!name || !name.trim()) return show('Enter a name');
+  name = name.trim();
+  let p = findByName(name);
+  if(p){
+    p.lastUpdate = now();
+    show(`Updated ${p.name}`);
+  } else {
+    p = {
+      id: uid(), name, score: 0, status: 'active', focused:false, focusedAt:null,
+      history: [], screenshots: [], createdAt: now(), lastUpdate: now()
+    };
+    store.people.push(p);
+    show(`Added ${p.name}`);
+  }
+  save();
+  postChange();
+}
+
+/* add score history record (after change) */
+function pushHistory(p, newScore){
+  p.history = p.history || [];
+  const last = p.history[p.history.length-1];
+  if(!last || last.score !== newScore){
+    p.history.push({ score: newScore, t: now() });
+    if(p.history.length > MAX_HISTORY) p.history.shift();
+  }
+}
+
+/* change score */
 function changeScore(id, delta){
-  const p = rizz.people.find(x => x.id === id);
-  if(!p) return;
+  const p = getById(id); if(!p) return;
   p.score = clamp(p.score + delta);
-  p.lastTickAt = now();
-  saveRizz();
-  enforceAutoFocus(); // must run after score change
-  renderRizz();
+  p.lastUpdate = now();
+  pushHistory(p, p.score);
+  save();
+  // enforce auto-focus atomically
+  enforceAutoFocus();
+  render();
 }
 
-/* Manual set focus */
-function setFocus(id){
-  const p = rizz.people.find(x => x.id === id);
-  if(!p) return;
-  if(!p.focused){
-    // if limit reached remove oldest focused
-    const focused = rizz.people.filter(x => x.focused).sort((a,b)=> (a.focusedAt||0) - (b.focusedAt||0));
-    if(focused.length >= FOCUS_LIMIT){
-      const demote = focused[0];
-      demote.focused = false;
-      demote.focusedAt = null;
-      notify("Focus limit reached — oldest focus removed");
-    }
-    p.focused = true;
-    p.focusedAt = now();
-  } else {
-    // unfocus
-    p.focused = false;
-    p.focusedAt = null;
-  }
-  p.lastTickAt = now();
-  saveRizz();
-  renderRizz();
+/* screenshots: small dataURLs (limit per person) */
+function handleScreenshot(id, file){
+  const p = getById(id); if(!p) return;
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=> {
+    p.screenshots = p.screenshots || [];
+    // keep only last 3 thumbnails
+    p.screenshots.push(reader.result);
+    if(p.screenshots.length > 3) p.screenshots.shift();
+    save(); render();
+  };
+  reader.readAsDataURL(file);
 }
 
-/* Pause/resume */
+/* toggle pause */
 function togglePause(id){
-  const p = rizz.people.find(x => x.id === id);
-  if(!p) return;
+  const p = getById(id); if(!p) return;
   p.status = (p.status === 'paused') ? 'active' : 'paused';
-  // if pausing also unfocus
-  if(p.status === 'paused' && p.focused){
-    p.focused = false;
-    p.focusedAt = null;
-  }
-  p.lastTickAt = now();
-  saveRizz();
-  renderRizz();
+  if(p.status === 'paused' && p.focused){ p.focused = false; p.focusedAt = null; }
+  p.lastUpdate = now();
+  save(); postChange();
 }
 
-/* Remove */
-function removePerson(id){
-  const p = rizz.people.find(x => x.id === id);
-  if(!p) return;
-  rizz.people = rizz.people.filter(x => x.id !== id);
-  saveRizz();
-  notify("Deleted " + p.name);
-  renderRizz();
-}
-
-/* Enforce auto-focus logic:
-   - any person with score >= AUTO_FOCUS_THRESHOLD & not paused becomes focused
-   - if focus limit exceeded, remove oldest focused (by focusedAt)
-*/
-function enforceAutoFocus(){
-  const candidates = rizz.people.filter(p => p.score >= AUTO_FOCUS_THRESHOLD && !p.focused && p.status !== 'paused');
-  if(candidates.length === 0) return;
-  candidates.forEach(p => {
-    // remove oldest if needed
-    const focusedNow = rizz.people.filter(x => x.focused).sort((a,b)=> (a.focusedAt||0) - (b.focusedAt||0));
-    if(focusedNow.length >= FOCUS_LIMIT){
-      const dem = focusedNow[0];
-      dem.focused = false;
-      dem.focusedAt = null;
-      notify("Focus limit reached — oldest focus removed");
+/* toggle focus manually (enforce limit) */
+function toggleFocus(id){
+  const p = getById(id); if(!p) return;
+  if(!p.focused){
+    const cur = store.people.filter(x=>x.focused);
+    if(cur.length >= FOCUS_LIMIT){
+      // demote oldest focused
+      cur.sort((a,b)=> (a.focusedAt||0) - (b.focusedAt||0));
+      cur[0].focused = false; cur[0].focusedAt = null;
+      show('⚠ Focus limit reached — oldest focus removed');
     }
-    p.focused = true;
-    p.focusedAt = now();
-    notify("Auto-Focus: " + p.name);
-  });
-  saveRizz();
-  renderRizz();
+    p.focused = true; p.focusedAt = now();
+  } else {
+    p.focused = false; p.focusedAt = null;
+  }
+  p.lastUpdate = now();
+  save(); postChange();
 }
 
-/* Decay: compute how many 2-day periods passed since lastDecayAt and apply */
+/* delete */
+function deletePerson(id){
+  const p = getById(id); if(!p) return;
+  if(!confirm(`Delete ${p.name}?`)) return;
+  store.people = store.people.filter(x=>x.id!==id);
+  save(); render();
+}
+
+/* ---------- Decay ---------- */
 function runDecay(force=false){
-  const last = rizz.lastDecayAt || now();
-  const msPerPeriod = DECAY_MS;
+  const last = store.lastDecayAt || now();
+  const msPerPeriod = DECAY_DAYS * 24 * 60 * 60 * 1000;
   const elapsed = now() - last;
   const steps = force ? 1 : Math.floor(elapsed / msPerPeriod);
   if(steps <= 0 && !force) return;
-  rizz.people.forEach(p => {
-    if(p.focused) return; // skip focused
-    if(p.status === 'paused') return; // skip paused
+  store.people.forEach(p=>{
+    // skip focused or paused
+    if(p.focused || p.status === 'paused') return;
     const total = DECAY_AMOUNT * steps;
-    if(total > 0){
+    if(total>0){
       p.score = clamp(p.score - total);
+      p.lastUpdate = now();
+      pushHistory(p, p.score);
     }
   });
-  rizz.lastDecayAt = force ? now() : (last + steps * msPerPeriod);
-  saveRizz();
-  enforceAutoFocus();
-  renderRizz();
-  notify("Decay applied (" + (steps || 1) + " step(s))");
+  store.lastDecayAt = force ? now() : (last + steps * msPerPeriod);
+  save(); postChange();
+  show(`Decay applied (${steps || 1})`);
 }
 
-/* Run checks after user actions */
-function runPostChange(){
-  runDecay();           // apply any due decay
-  enforceAutoFocus();   // auto-focus those who hit threshold
-  renderRizz();
-}
-
-/* UI render for Rizz list */
-function renderRizz(){
-  loadRizz(); // ensure latest
-  const list = document.getElementById('rizzList');
-  list.innerHTML = '';
-  if(rizz.people.length === 0){
-    list.innerHTML = '<div class="smallText" style="color:var(--muted)">No people yet. Add names manually or from screenshot.</div>';
-    return;
+/* ---------- Predictions Logic ---------- */
+function computePrediction(p){
+  // base is progress %
+  let base = p.score || 0;
+  // status bonus
+  let statusBonus = 0;
+  if(p.focused) statusBonus = 25;
+  else if(p.status === 'paused') statusBonus = -12;
+  else statusBonus = 0;
+  // stability: small recent changes => bonus
+  let stabilityBonus = 0;
+  if(Array.isArray(p.history) && p.history.length >= 2){
+    // compute average absolute change between last 3 points
+    let deltas = [];
+    for(let i=1;i<p.history.length;i++) deltas.push(Math.abs(p.history[i].score - p.history[i-1].score));
+    const avg = deltas.reduce((a,b)=>a+b,0)/deltas.length;
+    if(avg <= 4) stabilityBonus = 10;
+    else if(avg <= 10) stabilityBonus = 5;
+  } else {
+    // short history but >=1 point - give small bonus for having any momentum
+    if(p.history && p.history.length === 1) stabilityBonus = 3;
   }
-  // sort: focused first (recent) then score desc
-  const sorted = [...rizz.people].sort((a,b) => {
-    const af = !!a.focused, bf = !!b.focused;
-    if(af !== bf) return af ? -1 : 1;
-    if(b.score !== a.score) return b.score - a.score;
+  // conflict penalty: if many high scorers
+  const highCount = store.people.filter(x=> (x.score||0) >= 80 ).length;
+  let conflictPenalty = 0;
+  if(highCount > 1) conflictPenalty = (highCount - 1) * 8; // small penalty per extra high competitor
+
+  const raw = base + statusBonus + stabilityBonus - conflictPenalty;
+  const score = clamp(Math.round(raw), 0, 150); // allow >100 in raw, but clamp for display
+  return { scoreRaw: raw, score: score, parts: { base, statusBonus, stabilityBonus, conflictPenalty } };
+}
+
+function getPredictionLabel(v){
+  if(v >= 110) return {label:'Most Likely', cls:'most'};
+  if(v >= 85) return {label:'Most Likely', cls:'most'};
+  if(v >= 70) return {label:'Potential', cls:'potential'};
+  return {label:'Low', cls:'low'};
+}
+
+/* ---------- Auto-focus enforcement ---------- */
+function enforceAutoFocus(){
+  // candidates who reach threshold
+  const candidates = store.people.filter(p => p.score >= AUTO_FOCUS_THRESHOLD && !p.focused && p.status !== 'paused');
+  if(candidates.length === 0) return;
+  // sort by score desc and apply one by one
+  candidates.sort((a,b)=> b.score - a.score);
+  candidates.forEach(p=>{
+    const cur = store.people.filter(x=>x.focused);
+    if(cur.length >= FOCUS_LIMIT){
+      cur.sort((a,b)=> (a.focusedAt||0) - (b.focusedAt||0));
+      cur[0].focused = false; cur[0].focusedAt = null;
+      show('⚠ Focus limit reached — oldest focus removed');
+    }
+    p.focused = true; p.focusedAt = now();
+    show(`⚡ Auto-Focus applied to ${p.name}`);
+  });
+  save(); render();
+}
+
+/* ---------- Post-change hook ---------- */
+function postChange(){
+  // run decay if needed and then auto-focus and render
+  runDecay(false);
+  enforceAutoFocus();
+  render();
+}
+
+/* ---------- Render UI ---------- */
+const listEl = document.getElementById('list');
+function render(){
+  listEl.innerHTML = '';
+  // sort: focused first, then prediction score desc, then name
+  const peopleCopy = [...store.people];
+  peopleCopy.sort((a,b)=>{
+    if(a.focused !== b.focused) return a.focused ? -1 : 1;
+    const pa = computePrediction(a).score;
+    const pb = computePrediction(b).score;
+    if(pb !== pa) return pb - pa;
     return a.name.localeCompare(b.name);
   });
 
-  sorted.forEach(p => {
-    const div = document.createElement('div');
-    div.className = 'person';
-    div.innerHTML = `
+  peopleCopy.forEach(p=>{
+    const el = document.createElement('div');
+    el.className = 'person';
+    el.innerHTML = `
       <div class="row">
-        <div><div class="name">${escapeHtml(p.name)} — ${p.score}%</div></div>
-        <div><span class="badge ${p.focused ? 'focus' : ''}">${p.focused ? 'FOCUS' : (p.status === 'paused' ? 'PAUSED' : 'ACTIVE')}</span></div>
+        <div>
+          <div class="title">${escapeHtml(p.name)} — ${p.score}%</div>
+          <div style="margin-top:6px">
+            <span class="badge ${p.focused?'focus':''}">${p.focused ? 'FOCUS' : (p.status === 'paused' ? 'PAUSED' : 'ACTIVE')}</span>
+            <span style="color:var(--muted);margin-left:10px;font-size:13px">Updated ${timeAgo(p.lastUpdate)}</span>
+          </div>
+        </div>
+        <div>
+          ${p.screenshots && p.screenshots.length ? p.screenshots.map(s=>`<img class="screenshotThumb" src="${s}">`).join('') : ''}
+        </div>
       </div>
+
       <div class="progressWrap"><div class="progress" style="width:${p.score}%"></div></div>
-      <div class="actionRow">
-        <button class="actionBtn" onclick="changeScoreBy('${p.id}', -10)">-10</button>
-        <button class="actionBtn" onclick="changeScoreBy('${p.id}', +10)">+10</button>
-        <button class="actionBtn" onclick="setFocus('${p.id}')">${p.focused ? 'Unfocus' : 'Focus'}</button>
-        <button class="actionBtn" onclick="togglePause('${p.id}')">${p.status === 'paused' ? 'Resume' : 'Pause'}</button>
-        <button class="actionBtn" onclick="removePerson('${p.id}')">Delete</button>
+
+      <div class="actions">
+        <button class="action" data-action="minus" data-id="${p.id}">-10</button>
+        <button class="action" data-action="plus" data-id="${p.id}">+10</button>
+        <button class="action" data-action="focus" data-id="${p.id}">${p.focused?'Unfocus':'Focus'}</button>
+        <button class="action" data-action="pause" data-id="${p.id}">${p.status==='paused'?'Resume':'Pause'}</button>
+        <label style="display:inline-block;cursor:pointer">
+          <input type="file" accept="image/*" data-upload="${p.id}" style="display:none">
+          <button class="action">📷 Attach</button>
+        </label>
+        <button class="action" data-action="delete" data-id="${p.id}" style="background:#ffb3b3">Delete</button>
+      </div>
+      <div style="margin-top:8px;color:var(--muted);font-size:13px">
+        Prediction: ${Math.round(computePrediction(p).score)} — ${getPredictionLabel(computePrediction(p).score).label}
       </div>
     `;
-    list.appendChild(div);
+    listEl.appendChild(el);
+  });
+
+  // update predictions panel if visible
+  if(document.getElementById('predictions').style.display !== 'none'){
+    updatePredictionsPanel();
+  }
+}
+
+/* ---------- Predictions panel ---------- */
+const predToggle = document.getElementById('predToggle');
+predToggle.addEventListener('click', ()=>{
+  const panel = document.getElementById('predictions');
+  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+  predToggle.textContent = panel.style.display === 'none' ? 'Show Predictions' : 'Hide Predictions';
+  if(panel.style.display !== 'none') updatePredictionsPanel();
+});
+
+function updatePredictionsPanel(){
+  const predList = document.getElementById('predList');
+  predList.innerHTML = '';
+  // compute predictions
+  const arr = store.people.map(p => ({ id: p.id, name: p.name, score: computePrediction(p).score }));
+  arr.sort((a,b)=>b.score - a.score);
+  arr.forEach((it, idx)=>{
+    const label = getPredictionLabel(it.score);
+    const div = document.createElement('div');
+    div.className = 'predItem';
+    div.innerHTML = `<div style="font-weight:700">${idx+1}. ${escapeHtml(it.name)}</div><div style="display:flex;gap:8px;align-items:center"><div style="font-weight:800">${it.score}</div><div class="predLabel ${label.cls}">${label.label}</div></div>`;
+    predList.appendChild(div);
   });
 }
 
-/* Small wrappers used by render action buttons */
-function changeScoreBy(id, delta){ changeScore(id, delta); }
-
-/* escape html */
-function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=> ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-
-/* notify helper */
-function notify(msg){ const b = document.getElementById('banner'); b.style.display = 'block'; b.textContent = msg; clearTimeout(b._t); b._t = setTimeout(()=> b.style.display = 'none', 3000); }
-
-/* ===========================
-   Screenshot OCR and parsing
-   Uses Tesseract.js loaded from CDN
-   - Accept an image file
-   - Run OCR in browser
-   - Show raw text and quick parsed results
-   - Offer "Add detected names" buttons to add to Rizz
-   - Offer suggested WhatsApp reply templates with one-click to open wa.me
-   =========================== */
-
-const fileInput = document.getElementById('screenshotFile');
-const startOcrBtn = document.getElementById('startOcr');
-const clearOcrBtn = document.getElementById('clearOcr');
-const ocrStatus = document.getElementById('ocrStatus');
-const ocrTextEl = document.getElementById('ocrText');
-const ocrPreview = document.getElementById('ocrImagePreview');
-const parsedResults = document.getElementById('parsedResults');
-const templatesArea = document.getElementById('templatesArea');
-const ocrProgressBar = document.querySelector('.progressLine');
-const ocrProgressFill = document.getElementById('ocrProgress');
-
-let currentImageDataUrl = null;
-let lastOcrText = '';
-
-function resetOcrUI(){
-  ocrStatus.textContent = '';
-  ocrTextEl.style.display = 'none';
-  ocrTextEl.textContent = '';
-  ocrPreview.innerHTML = '';
-  parsedResults.innerHTML = '';
-  templatesArea.innerHTML = 'No templates yet — run OCR on a screenshot or click "Suggest Texts for All".';
-  if(ocrProgressBar) ocrProgressBar.style.display = 'none';
-  if(ocrProgressFill) ocrProgressFill.style.width = '0%';
-  currentImageDataUrl = null;
-  lastOcrText = '';
+/* ---------- Helpers ---------- */
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function timeAgo(ts){
+  if(!ts) return 'just now';
+  const s = Math.floor((Date.now() - ts)/1000);
+  if(s < 60) return s + 's';
+  if(s < 3600) return Math.floor(s/60) + 'm';
+  if(s < 86400) return Math.floor(s/3600) + 'h';
+  return Math.floor(s/86400) + 'd';
 }
 
-/* display preview */
-fileInput.addEventListener('change', e=>{
-  resetOcrUI();
-  const f = e.target.files && e.target.files[0];
-  if(!f) return;
-  const url = URL.createObjectURL(f);
-  const img = document.createElement('img');
-  img.style.maxWidth = '100%';
-  img.style.borderRadius = '8px';
-  img.src = url;
-  ocrPreview.innerHTML = '';
-  ocrPreview.appendChild(img);
-  currentImageDataUrl = url;
-  ocrStatus.textContent = 'Ready to OCR — press "Run OCR".';
-});
-
-/* Run OCR using Tesseract */
-startOcrBtn.addEventListener('click', async ()=>{
-  if(!currentImageDataUrl) return notify('Upload a screenshot first');
-  ocrStatus.textContent = 'Starting OCR...';
-  ocrTextEl.style.display = 'none';
-  parsedResults.innerHTML = '';
-  templatesArea.innerHTML = '';
-  if(ocrProgressBar) ocrProgressBar.style.display = 'block';
-  try{
-    const worker = Tesseract.createWorker({
-      logger: m => {
-        if(m.status === 'recognizing text' && m.progress){
-          const pct = Math.round(m.progress * 100);
-          if(ocrProgressFill) ocrProgressFill.style.width = pct + '%';
-          ocrStatus.textContent = `OCR progress: ${pct}%`;
-        } else {
-          ocrStatus.textContent = m.status || 'Working...';
-        }
-      }
-    });
-    await worker.load();
-    await worker.loadLanguage('eng');
-    await worker.initialize('eng');
-    const { data } = await worker.recognize(currentImageDataUrl);
-    await worker.terminate();
-    lastOcrText = data && data.text ? data.text.trim() : '';
-    ocrTextEl.style.display = 'block';
-    ocrTextEl.textContent = lastOcrText || '[No text recognized — try a clearer screenshot]';
-    ocrStatus.textContent = 'OCR finished';
-    parseOcrText(lastOcrText);
-  }catch(err){
-    console.error(err);
-    ocrStatus.textContent = 'OCR failed: ' + (err.message || err);
-    ocrTextEl.style.display = 'block';
-    ocrTextEl.textContent = 'OCR error: ' + (err.message || String(err));
-    if(ocrProgressBar) ocrProgressBar.style.display = 'none';
-  }
-});
-
-/* Clear OCR UI */
-clearOcrBtn.addEventListener('click', ()=> {
-  fileInput.value = '';
-  resetOcrUI();
-});
-
-/* Parse OCR text heuristically */
-function parseOcrText(text){
-  parsedResults.innerHTML = '';
-  templatesArea.innerHTML = '';
-  if(!text || !text.trim()){
-    parsedResults.innerHTML = '<div class="smallText">No text parsed.</div>';
-    return;
-  }
-
-  // 1) extract phone numbers (simple regex)
-  const phoneRegex = /(\+?\d{8,15})/g;
-  const phones = [...new Set((text.match(phoneRegex) || []))];
-
-  // 2) extract candidate names: capitalized words or pairs (heuristic)
-  const words = text.split(/\s+/).filter(Boolean);
-  const nameCandidates = [];
-  for(let i=0;i<words.length;i++){
-    const w = words[i].replace(/[^A-Za-z\-]/g,'');
-    if(w.length>=2 && /^[A-Z][a-z]+$/.test(w)){
-      // try pair (First Last)
-      const nxt = (words[i+1]||'').replace(/[^A-Za-z\-]/g,'');
-      if(nxt && /^[A-Z][a-z]+$/.test(nxt)){
-        nameCandidates.push(w + ' ' + nxt);
-      } else {
-        nameCandidates.push(w);
-      }
-    }
-  }
-  const names = [...new Set(nameCandidates)].slice(0,8);
-
-  // 3) times (like 7:00, 1:00am, 13:00)
-  const timeRegex = /(\b(?:[01]?\d|2[0-3]):[0-5]\d(?:\s?(?:am|pm))?\b)/gi;
-  const times = [...new Set((text.match(timeRegex) || []))];
-
-  // 4) short message snippets: pull lines that look like messages (short lines)
-  const lines = text.split(/\n/).map(l=>l.trim()).filter(Boolean);
-  const snippets = lines.filter(l=> l.length < 160).slice(0,8);
-
-  // Build UI
-  let html = '<div class="sectionTitle">Detected</div>';
-  if(names.length){
-    html += '<div><strong>Names:</strong></div>';
-    names.forEach(n => {
-      html += `<div style="margin:6px 0">
-        <span style="display:inline-block;background:#111;padding:6px 8px;border-radius:8px;margin-right:8px">${escapeHtml(n)}</span>
-        <button class="actionBtn" onclick="addDetectedName(${JSON.stringify(n)})">Add to Rizz</button>
-      </div>`;
-    });
-  }
-  if(phones.length){
-    html += '<div style="margin-top:8px"><strong>Phones:</strong></div>';
-    phones.forEach(ph => {
-      html += `<div style="margin:6px 0"><span style="display:inline-block;background:#111;padding:6px 8px;border-radius:8px;margin-right:8px">${escapeHtml(ph)}</span></div>`;
-    });
-  }
-  if(times.length){
-    html += '<div style="margin-top:8px"><strong>Times found:</strong> ${escapeHtml(times.join(', '))}</div>';
-  }
-  if(snippets.length){
-    html += '<div style="margin-top:8px"><strong>Message snippets:</strong></div>';
-    snippets.forEach(s => {
-      html += `<div style="margin:6px 0;padding:8px;background:#050505;border-radius:8px">${escapeHtml(s)}</div>`;
-    });
-  }
-  parsedResults.innerHTML = html;
-
-  // Extract templates (simple)
-  const templates = generateTemplatesFromText(text, names, snippets);
-  renderTemplates(templates);
-}
-
-/* Called by parsed UI */
-function addDetectedName(name){
-  addOrUpdatePerson(name);
-}
-
-/* Generate a few quick templates based on parsed text and detected names */
-function generateTemplatesFromText(text, names, snippets){
-  const templates = [];
-  const baseSnippet = snippets.length ? snippets[0] : (text.split('\n').find(Boolean) || 'Hey');
-  // Generic templates
-  templates.push({ title: 'Short playful', text: `Hey ${names[0]||''}! I saw your message — you good? 😊` });
-  templates.push({ title: 'Smooth check-in', text: `Hello ${names[0]||''}, hope you’re well. About your message: ${baseSnippet}` });
-  templates.push({ title: 'Set meet', text: `Hi ${names[0]||''}. I can help. When are you free?` });
-  templates.push({ title: 'Ask for details', text: `Hey, saw this: "${baseSnippet}". Can you send more details?` });
-  // If time found, add schedule template
-  const timeMatch = text.match(/([01]?\d|2[0-3]):[0-5]\d(?:\s?(?:am|pm))?/i);
-  if(timeMatch){
-    templates.push({ title: 'Confirm time', text: `Okay ${names[0]||''}, let's meet at ${timeMatch[0]}. Does that work?` });
-  }
-  return templates.slice(0,6);
-}
-
-function renderTemplates(templates){
-  if(!templates || !templates.length){
-    templatesArea.innerHTML = 'No templates generated.';
-    return;
-  }
-  let html = '';
-  templates.forEach((t, i) => {
-    html += `<div style="margin-bottom:8px">
-      <div style="font-weight:700">${escapeHtml(t.title)}</div>
-      <div style="margin:6px 0">${escapeHtml(t.text)}</div>
-      <div>
-        <button class="actionBtn" onclick="copyTemplateText(${JSON.stringify(t.text)})">Copy</button>
-        <a class="linkBtn" href="${makeWhatsAppLink(t.text)}" target="_blank" rel="noopener">Open WhatsApp</a>
-      </div>
-    </div>`;
-  });
-  templatesArea.innerHTML = html;
-}
-
-/* Copy text to clipboard */
-function copyTemplateText(t){
-  navigator.clipboard?.writeText(t).then(()=> notify('Copied to clipboard'), ()=> notify('Copy failed'));
-}
-
-/* Construct wa.me link (prefill only) */
-function makeWhatsAppLink(text){
-  const encoded = encodeURIComponent(text);
-  return `https://wa.me/?text=${encoded}`;
-}
-
-/* ===========================
-   Hook UI controls and boot
-   =========================== */
-function addOrUpdatePersonFromInput(){
-  const val = document.getElementById('addName').value.trim();
-  if(!val) return notify('Type a name to add');
-  addOrUpdatePerson(val);
-  document.getElementById('addName').value = '';
-}
-
-document.getElementById('addBtn').addEventListener('click', addOrUpdatePersonFromInput);
-document.getElementById('clearBtn').addEventListener('click', ()=> {
-  if(confirm('Clear all Rizz people?')) { rizz.people = []; rizz.lastDecayAt = now(); saveRizz(); renderRizz(); notify('Cleared all'); }
+/* ---------- Events (delegation) ---------- */
+document.getElementById('addBtn').addEventListener('click', ()=> {
+  addOrUpdate(nameIn.value || '');
+  nameIn.value = '';
 });
 document.getElementById('decayBtn').addEventListener('click', ()=> runDecay(true));
-document.getElementById('autoRankBtn').addEventListener('click', ()=> {
-  // quick rank: sort and focus top two
-  rizz.people.sort((a,b)=> b.score - a.score);
-  rizz.people.forEach((p,i)=> { p.focused = (i < FOCUS_LIMIT); p.focusedAt = p.focused ? now() : null; });
-  saveRizz();
-  renderRizz();
-  notify('Auto-rank applied');
+document.getElementById('list').addEventListener('click', (e)=>{
+  const btn = e.target.closest('button[data-action]');
+  if(!btn) return;
+  const id = btn.dataset.id;
+  const action = btn.dataset.action;
+  if(action === 'minus') changeScore(id, -10);
+  if(action === 'plus') changeScore(id, +10);
+  if(action === 'focus') toggleFocus(id);
+  if(action === 'pause') togglePause(id);
+  if(action === 'delete') deletePerson(id);
 });
-document.getElementById('suggestTextBtn').addEventListener('click', ()=> {
-  const templates = [];
-  rizz.people.forEach(p => {
-    templates.push({ title: `Text for ${p.name}`, text: `Hey ${p.name}, how are you?` });
-  });
-  renderTemplates(templates);
-});
-
-/* OCR: wire start button (uses Tesseract.js) */
-startOcrBtn.addEventListener('click', async ()=>{
-  if(!fileInput.files || !fileInput.files[0]) return notify('Choose an image file first');
-  parsedResults.innerHTML = '';
-  templatesArea.innerHTML = '';
-  ocrTextEl.style.display = 'none';
-  ocrStatus.textContent = 'Initializing OCR...';
-  if(ocrProgressBar) ocrProgressBar.style.display = 'block';
-  try{
-    const worker = Tesseract.createWorker({
-      logger: m => {
-        // update progress
-        if(m.status === 'recognizing text' && typeof m.progress === 'number'){
-          const pct = Math.round(m.progress * 100);
-          if(ocrProgressFill) ocrProgressFill.style.width = pct + '%';
-          ocrStatus.textContent = `OCR ${pct}%`;
-        } else {
-          ocrStatus.textContent = m.status || '';
-        }
-      }
-    });
-    await worker.load();
-    await worker.loadLanguage('eng');
-    await worker.initialize('eng');
-    const { data } = await worker.recognize(fileInput.files[0]);
-    await worker.terminate();
-    lastOcrText = data.text || '';
-    ocrTextEl.style.display = 'block';
-    ocrTextEl.textContent = lastOcrText;
-    ocrStatus.textContent = 'OCR Done';
-    parseOcrText(lastOcrText);
-  }catch(err){
-    console.error(err);
-    ocrStatus.textContent = 'OCR error: ' + (err.message || err);
-    ocrTextEl.style.display = 'block';
-    ocrTextEl.textContent = 'OCR failed';
-  } finally {
-    if(ocrProgressBar) ocrProgressBar.style.display = 'none';
-    if(ocrProgressFill) ocrProgressFill.style.width = '0%';
-  }
+document.getElementById('list').addEventListener('change', (e)=>{
+  const fileInput = e.target;
+  if(!fileInput.dataset.upload) return;
+  const id = fileInput.dataset.upload;
+  const f = fileInput.files && fileInput.files[0];
+  if(f) handleScreenshot(id, f);
+  // reset input
+  fileInput.value = '';
 });
 
-/* helpers used by parsed UI functions (expose) */
-window.addDetectedName = name => addDetectedName(name);
-window.copyTemplateText = t => copyTemplateText(t);
-window.makeWhatsAppLink = t => makeWhatsAppLink(t);
+/* ---------- Boot ---------- */
+function init(){
+  load();
+  // normalize store shape (backwards-safe)
+  store.people = (store.people || []).map(p => ({
+    id: p.id || uid(),
+    name: p.name || 'Unknown',
+    score: clamp(p.score || 0),
+    status: p.status || 'active',
+    focused: !!p.focused,
+    focusedAt: p.focusedAt || null,
+    history: p.history || [],
+    screenshots: p.screenshots || [],
+    createdAt: p.createdAt || now(),
+    lastUpdate: p.lastUpdate || now()
+  }));
+  if(!store.lastDecayAt) store.lastDecayAt = now();
+  // apply any pending decay periods
+  runDecay(false);
+  // after decay, enforce auto-focus in case someone crosses threshold
+  enforceAutoFocus();
+  render();
+}
+init();
 
-/* init store and render */
-loadRizz();
-runPostChange(); // applies decay if needed + autoselect
-renderRizz();
-resetOcrUI();
+/* expose for debug */ window._rizz = { store, save, runDecay, enforceAutoFocus, computePrediction };
 
 </script>
 </body>
