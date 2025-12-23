@@ -1,150 +1,150 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Rizz System Dashboard</title>
-
 <style>
-body {
-  background: #000;
-  color: #fff;
-  font-family: Arial, sans-serif;
-  padding: 20px;
-}
-
-h1 {
-  margin-bottom: 10px;
-}
-
-input, button {
-  padding: 6px 10px;
-  margin-right: 5px;
-  border-radius: 5px;
-  border: none;
-}
-
-button {
-  cursor: pointer;
-}
-
-.person {
-  margin-top: 20px;
-}
-
-.bar {
-  background: #333;
-  height: 12px;
-  border-radius: 6px;
-  overflow: hidden;
-  margin: 6px 0;
-}
-
-.fill {
-  height: 100%;
-  background: #00ff88;
-  width: 0%;
-}
-
-.controls button {
-  margin-right: 5px;
-  margin-top: 5px;
-}
-
-.status {
-  font-size: 12px;
-  padding: 2px 6px;
-  border-radius: 4px;
-  margin-left: 6px;
-}
-
-.active { background: #555; }
-.focus { background: #00ff88; color: #000; }
-.pause { background: #ff5555; }
+  :root{--bg:#000;--fg:#fff;--muted:#666;--accent:#00ff88;--danger:#ff6b6b}
+  body{background:var(--bg);color:var(--fg);font-family:system-ui,Arial; padding:22px}
+  h1{font-size:30px;margin:0 0 14px}
+  input, button{padding:8px 10px;border-radius:8px;border:0;outline:none}
+  input{min-width:180px;margin-right:8px}
+  button{background:#efefef;color:#000}
+  .person{margin-top:18px}
+  .bar{background:#222;height:14px;border-radius:8px;overflow:hidden;margin:8px 0}
+  .fill{height:100%;background:var(--accent);width:0%}
+  .controls button{margin-right:6px;margin-top:6px}
+  .status{display:inline-block;padding:4px 8px;border-radius:6px;margin-left:8px;font-size:12px}
+  .Active{background:#444;color:#fff}
+  .Focus{background:var(--accent);color:#000}
+  .Pause{background:var(--danger);color:#fff}
+  .delete{background:#111;color:#fff;padding:5px 8px;border-radius:6px;margin-left:8px}
+  small{color:var(--muted)}
 </style>
 </head>
-
 <body>
+  <h1>🔥 Rizz System Dashboard</h1>
 
-<h1>🔥 Rizz System Dashboard</h1>
-
-<input id="nameInput" placeholder="Enter name (e.g. Charity)" />
-<button onclick="addPerson()">Add / Update</button>
-
-<div id="list"></div>
+  <input id="nameInput" placeholder="Enter name (e.g. Charity)" />
+  <button id="addBtn">Add / Update</button>
+  <div id="list" style="margin-top:12px"></div>
 
 <script>
-let people = JSON.parse(localStorage.getItem("rizzPeople")) || {};
+/* SAFE LOAD & SANITIZE */
+function loadPeople() {
+  try {
+    const raw = localStorage.getItem('rizzPeople');
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    const out = {};
+    // Keep only valid string keys that are not empty
+    Object.entries(parsed).forEach(([k,v])=>{
+      if (typeof k === 'string' && k.trim().length>0) {
+        const name = k.trim();
+        out[name] = {
+          score: (v && typeof v.score === 'number') ? Math.max(0, Math.min(100, v.score)) : 10,
+          status: (v && typeof v.status === 'string' && v.status.length>0) ? v.status : 'Active'
+        };
+      }
+    });
+    return out;
+  } catch(e){
+    console.warn('loadPeople error', e);
+    return {};
+  }
+}
+
+let people = loadPeople();
 
 function save() {
-  localStorage.setItem("rizzPeople", JSON.stringify(people));
+  localStorage.setItem('rizzPeople', JSON.stringify(people));
+}
+
+function sanitizeName(name) {
+  return name ? String(name).trim() : '';
 }
 
 function addPerson() {
-  const name = nameInput.value.trim();
-  if (!name) return;
-
-  if (!people[name]) {
-    people[name] = { score: 10, status: "Active" };
+  const raw = document.getElementById('nameInput').value;
+  const name = sanitizeName(raw);
+  if (!name) {
+    alert('Enter a name before adding.');
+    return;
   }
-
-  nameInput.value = "";
+  if (!people[name]) people[name] = { score: 10, status: 'Active' };
   save();
+  document.getElementById('nameInput').value = '';
   render();
 }
 
 function changeScore(name, delta) {
-  people[name].score = Math.max(0, Math.min(100, people[name].score + delta));
+  if (!people[name]) return;
+  people[name].score = Math.max(0, Math.min(100, (Number(people[name].score)||0) + delta));
   save();
   render();
 }
 
 function setStatus(name, status) {
-  if (status === "Focus") {
-    Object.keys(people).forEach(p => {
-      if (people[p].status === "Focus") {
-        people[p].status = "Active";
-      }
-    });
+  if (!people[name]) return;
+  if (status === 'Focus') {
+    // only one focus allowed: clear others
+    Object.keys(people).forEach(k => { if (people[k].status === 'Focus') people[k].status = 'Active'; });
   }
   people[name].status = status;
   save();
   render();
 }
 
+function deletePerson(name) {
+  if (!people[name]) return;
+  if (!confirm('Delete ' + name + ' ?')) return;
+  delete people[name];
+  save();
+  render();
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+
 function render() {
-  const list = document.getElementById("list");
-  list.innerHTML = "";
+  const list = document.getElementById('list');
+  list.innerHTML = '';
+  // sort by score desc
+  const entries = Object.entries(people).sort((a,b)=> (b[1].score||0) - (a[1].score||0));
+  if (entries.length === 0) list.innerHTML = '<small>No people yet — add one above.</small>';
+  entries.forEach(([name,data])=>{
+    data.score = Math.max(0, Math.min(100, Number(data.score)||0));
+    if (!data.status) data.status = 'Active';
 
-  Object.entries(people).forEach(([name, data]) => {
-    if (!data.status) data.status = "Active";
-
-    const div = document.createElement("div");
-    div.className = "person";
-
+    const div = document.createElement('div');
+    div.className = 'person';
     div.innerHTML = `
-      <strong>${name} — ${data.score}%</strong>
-      <span class="status ${data.status.toLowerCase()}">${data.status}</span>
-
-      <div class="bar">
-        <div class="fill" style="width:${data.score}%"></div>
+      <div><strong>${escapeHtml(name)} — ${data.score}%</strong>
+        <span class="status ${escapeHtml(data.status)}">${escapeHtml(data.status)}</span>
+        <button class="delete" onclick="deletePerson('${escapeHtml(name)}')">Delete</button>
       </div>
+
+      <div class="bar"><div class="fill" style="width:${data.score}%"></div></div>
 
       <div class="controls">
-        <button onclick="changeScore('${name}', -10)">-10</button>
-        <button onclick="changeScore('${name}', 10)">+10</button>
-        <button onclick="setStatus('${name}', 'Focus')">Focus</button>
-        <button onclick="setStatus('${name}', 'Pause')">Pause</button>
-        <button onclick="setStatus('${name}', 'Active')">Active</button>
+        <button onclick="changeScore('${escapeHtml(name)}', -10)">-10</button>
+        <button onclick="changeScore('${escapeHtml(name)}', 10)">+10</button>
+        <button onclick="setStatus('${escapeHtml(name)}', 'Focus')">Focus</button>
+        <button onclick="setStatus('${escapeHtml(name)}', 'Pause')">Pause</button>
+        <button onclick="setStatus('${escapeHtml(name)}', 'Active')">Active</button>
       </div>
     `;
-
     list.appendChild(div);
   });
 }
 
+// wire UI
+document.getElementById('addBtn').addEventListener('click', addPerson);
+
+// first render
 render();
 </script>
-
 </body>
 </html>
