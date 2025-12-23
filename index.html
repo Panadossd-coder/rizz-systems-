@@ -5,23 +5,23 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Rizz System Dashboard</title>
 <style>
-  :root{--bg:#000;--card:#111;--accent:#12e69a;--muted:#666;--btn:#eee}
+  :root{--bg:#000;--card:#111;--accent:#12e69a;--muted:#888;--btn:#f1f3f5}
   html,body{height:100%;margin:0;background:var(--bg);color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;}
   .wrap{max-width:900px;margin:0 auto;padding:18px;}
-  h1{font-size:40px;margin:4px 0 18px;display:flex;align-items:center;gap:10px}
-  .banner{background:#f7a800;color:#000;padding:12px;border-radius:10px;margin-bottom:14px;font-weight:600}
+  h1{font-size:36px;margin:4px 0 18px;display:flex;align-items:center;gap:10px}
+  .banner{background:#f7a800;color:#000;padding:12px;border-radius:10px;margin-bottom:14px;font-weight:700}
   input[type="text"]{width:100%;padding:14px;border-radius:14px;border:none;font-size:16px;background:#fff;color:#111;box-sizing:border-box}
   .controls{display:flex;gap:12px;margin:10px 0 18px;flex-wrap:wrap}
-  button{background:var(--btn);border-radius:14px;padding:10px 14px;border:none;font-weight:600;cursor:pointer}
+  button{background:var(--btn);border-radius:14px;padding:10px 14px;border:none;font-weight:700;cursor:pointer}
   .list{margin-top:12px}
   .item{margin-bottom:24px}
   .title{display:flex;align-items:center;gap:12px;font-size:20px;margin-bottom:8px}
   .badge{background:#333;padding:6px 10px;border-radius:8px;font-size:12px;color:#ddd}
   .focusBadge{background:var(--accent);color:#002b1d;padding:6px 10px;border-radius:8px;font-weight:700}
-  .barWrap{background:#232323;height:14px;border-radius:10px;overflow:hidden;position:relative;margin-bottom:10px}
+  .barWrap{background:#222;height:14px;border-radius:10px;overflow:hidden;position:relative;margin-bottom:10px}
   .bar{height:100%;background:linear-gradient(90deg,var(--accent),#24d69b);transition:width .25s ease}
   .btnRow{display:flex;gap:10px;flex-wrap:wrap}
-  .smallBtn{padding:12px;border-radius:14px;background:#f1f1f1;color:#0d6efd;font-weight:700;border:none;cursor:pointer}
+  .smallBtn{padding:12px;border-radius:14px;background:#fff;color:#0d6efd;font-weight:700;border:none;cursor:pointer}
   .muted{color:var(--muted);font-size:14px;margin-top:10px}
   footer{margin-top:30px;color:#999;font-size:13px}
   @media (min-width:720px){.wrap{padding:36px}}
@@ -38,261 +38,208 @@
     <button id="addBtn">Add / Update</button>
     <button id="clearBtn">Clear All</button>
     <button id="decayNowBtn">Run Decay (test)</button>
-    <button id="exportBtn">Export JSON</button>
-    <input id="importFile" type="file" accept=".json" style="display:none">
-    <button id="importBtn">Import JSON</button>
   </div>
 
   <div id="list" class="list"></div>
 
   <footer>
-    Tip: +10/-10 clamps to 0..100. Focus limit = 2. Decay runs every 2 days automatically. Use Export/Import to backup.
+    Tip: +10/-10 clamps to 0..100. Focus limit = 2. Decay runs every 2 days automatically.
   </footer>
 </div>
 
 <script>
-/* ===== Configuration ===== */
-const STORAGE_KEY = 'rizz:data:v1';
+/* ===== CONFIG ===== */
+const STORAGE_KEY = 'rizz:data:v2';
 const FOCUS_LIMIT = 2;
-const AUTO_FOCUS_THRESHOLD = 90;     // auto-focus when score reaches this %
-const DECAY_DAYS = 2;               // decay period in days
-const DECAY_AMOUNT = 10;            // how much to reduce per period
-const DEBOUNCE_MS = 200;
+const AUTO_FOCUS_THRESHOLD = 90;
+const DECAY_DAYS = 2;      // apply decay per this many days
+const DECAY_AMOUNT = 10;   // amount to reduce per period
+const DEBOUNCE_MS = 150;
 
-/* ===== Utilities ===== */
+/* ===== HELPERS ===== */
 const now = ()=> Date.now();
 const clamp = (v,min=0,max=100)=> Math.max(min, Math.min(max, Math.round(v)));
-function debounce(fn, wait=DEBOUNCE_MS){
-  let t;
-  return (...a)=>{ clearTimeout(t); t = setTimeout(()=>fn(...a), wait); };
-}
-function mkId(){ return 'i'+Math.floor(Math.random()*1e9).toString(36); }
-function saveToStorage(data){ localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
-function loadFromStorage(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]') }catch(e){return []} }
+const mkId = ()=> 'id'+Math.floor(Math.random()*1e9).toString(36);
+const debounce = (fn, wait=DEBOUNCE_MS)=>{ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), wait); }; };
 
-/* ===== Data state ===== */
+function saveToStorage(obj){ localStorage.setItem(STORAGE_KEY, JSON.stringify(obj)); }
+function loadFromStorage(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]'); }catch(e){ return []; } }
+
+function showBanner(txt,ms=2200){
+  const b = document.getElementById('bannerArea');
+  b.innerHTML = `<div class="banner">${txt}</div>`;
+  if(ms>0) setTimeout(()=>{ if(b) b.innerHTML=''; }, ms);
+}
+
+/* ===== STATE ===== */
 let data = loadFromStorage(); // array of {id,name,score,status,focusedAt,lastUpdate}
-function ensureDefaults(){
+function normalize(){
   data = data.map(it=>({
-    id: it.id||mkId(),
-    name: String(it.name||'').trim(),
+    id: it.id || mkId(),
+    name: String(it.name || '').trim(),
     score: clamp(Number(it.score)||0),
     status: it.status || 'ACTIVE',
-    focusedAt: it.focusedAt||null,
+    focusedAt: it.focusedAt || null,
     lastUpdate: it.lastUpdate || now()
   })).filter(it=>it.name);
 }
-ensureDefaults();
 
-/* ===== Banners ===== */
-function showBanner(text,timeout=2500){
-  const el = document.getElementById('bannerArea');
-  el.innerHTML = `<div class="banner">${text}</div>`;
-  if(timeout>0) setTimeout(()=>{ if(el) el.innerHTML=''; }, timeout);
+/* ===== SAVE / RENDER ===== */
+function save(){ saveToStorage(data); }
+function setUIEnabled(enabled){
+  document.querySelectorAll('button, input').forEach(el=>{ if(el.id==='nameIn') return; el.disabled = !enabled; });
 }
 
-/* ===== Persistence + Save Hook ===== */
-function save(){
-  saveToStorage(data);
-}
-
-/* ===== Focus management ===== */
-function getFocused(){ return data.filter(d=>d.focusedAt).sort((a,b)=>b.focusedAt-a.focusedAt); }
-function setFocusOn(id){
-  const item = data.find(d=>d.id===id); if(!item) return;
-  item.focusedAt = item.focusedAt || now();
-  save(); render();
-  ensureFocusLimit();
-}
-function unsetFocus(id){
-  const item = data.find(d=>d.id===id); if(!item) return;
-  item.focusedAt = null;
-  save(); render();
-}
+/* ===== Focus helpers ===== */
+function getFocused(){ return data.filter(d=>d.focusedAt).sort((a,b)=>b.focusedAt - a.focusedAt); }
 function ensureFocusLimit(){
   const focused = getFocused();
   if(focused.length > FOCUS_LIMIT){
-    // remove oldest (smallest focusedAt)
+    // remove oldest focusedAt entries until under limit
     const sortedAsc = [...focused].sort((a,b)=>a.focusedAt - b.focusedAt);
-    const toRemove = sortedAsc.slice(0, focused.length - FOCUS_LIMIT);
-    toRemove.forEach(it=>{
-      it.focusedAt = null;
-    });
-    save();
-    render();
-    showBanner("⚠️ Focus limit reached — oldest focus removed", 2800);
+    const toClear = sortedAsc.slice(0, focused.length - FOCUS_LIMIT);
+    toClear.forEach(it => it.focusedAt = null);
+    save(); render();
+    showBanner('⚠️ Focus limit reached — oldest focus removed', 2200);
   }
-}
-/* auto-select focus if none focused */
-function autoSelectIfNone(){
-  if(getFocused().length>0) return;
-  // select highest score items up to limit
-  const candidates = [...data].sort((a,b)=>b.score - a.score).filter(d=>d.score>0);
-  if(candidates.length===0) return;
-  for(let i=0;i<Math.min(FOCUS_LIMIT, candidates.length); i++){
-    candidates[i].focusedAt = now() - (i*1000); // keep order
-  }
-  save(); render();
-  if(candidates.length>0) showBanner("ℹ️ No one was Focus — system auto-selected top entries", 3000);
 }
 
-/* auto-focus on threshold when score updated */
-function autoFocusOnThreshold(item){
+/* attempt to auto focus item when it reaches threshold */
+function autoFocusIfEligible(item){
+  if(!item) return;
   if(item.score >= AUTO_FOCUS_THRESHOLD && !item.focusedAt){
     item.focusedAt = now();
+    item.lastUpdate = now();
     save();
-    render();
     ensureFocusLimit();
-    showBanner("⚡ Auto-Focus: reached " + AUTO_FOCUS_THRESHOLD + "%", 2200);
+    render();
+    showBanner('⚡ Auto-Focus: reached ' + AUTO_FOCUS_THRESHOLD + '%', 2200);
   }
 }
 
-/* ===== Decay logic =====
-   Every DECAY_DAYS passed since lastUpdate we subtract DECAY_AMOUNT.
+/* If no focused entries, select top ones */
+function autoSelectIfNone(){
+  if(getFocused().length > 0) return;
+  const candidates = [...data].sort((a,b)=>b.score - a.score).filter(d=>d.score>0);
+  for(let i=0;i<Math.min(FOCUS_LIMIT, candidates.length); i++){
+    candidates[i].focusedAt = now() - i*1000;
+  }
+  if(candidates.length) { save(); render(); showBanner('ℹ️ No focus set — auto-selected top entries',2000); }
+}
+
+/* ===== DECAY =====
+   For each item, compute how many DECAY_DAYS periods passed since lastUpdate,
+   and subtract DECAY_AMOUNT per period. Update lastUpdate accordingly.
 */
 function runDecay(){
   const nowMs = now();
   let changed = false;
+  const periodMs = DECAY_DAYS * 24*3600*1000;
   data.forEach(it=>{
-    const elapsedMs = nowMs - (it.lastUpdate || nowMs);
-    const periods = Math.floor(elapsedMs / (DECAY_DAYS * 24*3600*1000));
-    if(periods>0){
+    const elapsed = nowMs - (it.lastUpdate || nowMs);
+    const periods = Math.floor(elapsed / periodMs);
+    if(periods > 0){
       it.score = clamp(it.score - periods * DECAY_AMOUNT);
-      it.lastUpdate = (it.lastUpdate || nowMs) + periods * DECAY_DAYS * 24*3600*1000;
+      it.lastUpdate = (it.lastUpdate || nowMs) + periods * periodMs;
       changed = true;
     }
   });
-  if(changed){ save(); render(); showBanner("Decay applied automatically"); }
+  if(changed){
+    save();
+    // after decay, items may have crossed threshold -> auto-focus them if they do
+    data.forEach(autoFocusIfEligible);
+    render();
+    showBanner('Decay applied', 1600);
+  }
 }
 
-/* ===== CRUD operations ===== */
+/* ===== CRUD & UI actions ===== */
 function addOrUpdate(){
   const nameEl = document.getElementById('nameIn');
   const name = String(nameEl.value || '').trim();
-  if(!name){ showBanner("Please enter a name",2200); return; }
+  if(!name){ showBanner('Please enter a name',1800); return; }
+  // find existing (case-insensitive)
   let item = data.find(d=>d.name.toLowerCase() === name.toLowerCase());
   if(item){
-    // update timestamp if exists
     item.lastUpdate = now();
-    showBanner("Updated "+item.name,1600);
+    showBanner('Updated ' + item.name,1400);
   } else {
     item = { id: mkId(), name, score: 0, status: 'ACTIVE', focusedAt: null, lastUpdate: now() };
     data.push(item);
-    showBanner("Added " + item.name,1400);
+    showBanner('Added ' + item.name,1400);
   }
-  save();
   nameEl.value = '';
-  render();
+  save(); render();
   autoSelectIfNone();
 }
-const safeAddOrUpdate = debounce(()=>{
-  setUIEnabled(false);
-  try{ addOrUpdate(); } finally { setTimeout(()=>setUIEnabled(true),120); }
-}, 200);
+
+const safeAddOrUpdate = debounce(()=>{ setUIEnabled(false); try{ addOrUpdate(); } finally { setTimeout(()=>setUIEnabled(true),100); }}, 120);
 
 function changeScore(id, delta){
   const it = data.find(d=>d.id===id); if(!it) return;
   it.score = clamp(it.score + delta);
   it.lastUpdate = now();
-  save(); render();
-  autoFocusOnThreshold(it);
+  save();
+  autoFocusIfEligible(it); // ensure auto-focus if new score hits threshold
+  render();
 }
 
-const safeChangeScore = (id, delta) => {
-  setUIEnabled(false);
-  try{ changeScore(id,delta); } finally { setTimeout(()=>setUIEnabled(true),120); }
-};
+const safeChangeScore = (id, delta) => { setUIEnabled(false); try{ changeScore(id, delta); } finally { setTimeout(()=>setUIEnabled(true),90); } };
 
 function setStatus(id, status){
   const it = data.find(d=>d.id===id); if(!it) return;
   it.status = status;
-  it.lastUpdate = now();
   if(status !== 'ACTIVE') it.focusedAt = null;
-  save(); render();
-  ensureFocusLimit();
+  it.lastUpdate = now();
+  save(); render(); ensureFocusLimit();
 }
 
+function setFocusOn(id){
+  const it = data.find(d=>d.id===id); if(!it) return;
+  it.focusedAt = now();
+  it.lastUpdate = now();
+  save(); ensureFocusLimit(); render();
+}
+
+function unsetFocus(id){ const it = data.find(d=>d.id===id); if(!it) return; it.focusedAt = null; save(); render(); }
+
 function removeItem(id){
-  const it = data.find(d=>d.id===id);
-  if(!it) return;
-  if(!confirm(`Delete "${it.name}"? This cannot be undone.`)) return;
-  data = data.filter(d=>d.id!==id);
+  const it = data.find(d=>d.id===id); if(!it) return;
+  if(!confirm(`Delete "${it.name}"?`)) return;
+  data = data.filter(d=>d.id !== id);
   save(); render();
 }
 
 function clearAll(){
-  if(!confirm("Clear all entries? This will erase local data.")) return;
+  if(!confirm('Clear all entries?')) return;
   data = [];
   save(); render();
 }
 
-/* ===== Export / Import ===== */
-function exportJSON(){
-  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = 'rizz-data.json';
-  document.body.appendChild(a); a.click(); a.remove();
-  URL.revokeObjectURL(url);
-}
-function importJSONFile(file){
-  if(!file) return;
-  const r = new FileReader();
-  r.onload = ()=>{
-    try{
-      const parsed = JSON.parse(r.result);
-      if(!Array.isArray(parsed)) throw new Error("Invalid file format");
-      if(!confirm("Replace current data with imported data?")) return;
-      data = parsed.map(it=>({
-        id: it.id || mkId(),
-        name: String(it.name||'').trim(),
-        score: clamp(Number(it.score)||0),
-        status: it.status||'ACTIVE',
-        focusedAt: it.focusedAt||null,
-        lastUpdate: it.lastUpdate || now()
-      })).filter(it=>it.name);
-      save(); render();
-      showBanner("Import complete",2000);
-    }catch(e){ alert("Import failed: "+e.message); }
-  };
-  r.readAsText(file);
-}
+/* ===== RENDER ===== */
+function escapeHtml(s){ return s.replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
 
-/* ===== UI helpers ===== */
-function setUIEnabled(enabled){
-  document.querySelectorAll('button, input[type="file"]').forEach(el=>{
-    // always keep import file input available
-    if(el.id === 'importFile') return;
-    el.disabled = !enabled;
-  });
-}
-
-/* ===== Render ===== */
 function render(){
-  // run quick decay on load as well (non-blocking)
-  // (don't call runDecay here to avoid loops; caller does)
+  normalize();
   const list = document.getElementById('list');
   list.innerHTML = '';
-  ensureDefaults();
-  // sort by focused first then score desc then name
+  // sort: focused first (recent), then score desc, then name
   const sorted = [...data].sort((a,b)=>{
-    const aF = !!a.focusedAt, bF = !!b.focusedAt;
-    if(aF !== bF) return aF ? -1 : 1;
+    const af = !!a.focusedAt, bf = !!b.focusedAt;
+    if(af !== bf) return af ? -1 : 1;
     if(b.score !== a.score) return b.score - a.score;
     return a.name.localeCompare(b.name);
   });
   if(sorted.length===0){
-    list.innerHTML = `<div class="muted">No entries yet. Add someone above.</div>`;
+    list.innerHTML = `<div class="muted">No entries — add someone to start the Rizz System.</div>`;
     return;
   }
+
   sorted.forEach(it=>{
-    const item = document.createElement('div');
-    item.className = 'item';
-    const title = document.createElement('div');
-    title.className = 'title';
+    const item = document.createElement('div'); item.className = 'item';
+    const title = document.createElement('div'); title.className = 'title';
     title.innerHTML = `<div style="flex:1"><strong>${escapeHtml(it.name)}</strong> — ${it.score}%</div>`;
-    const badge = document.createElement('div');
-    badge.className = it.focusedAt ? 'focusBadge' : 'badge';
+    const badge = document.createElement('div'); badge.className = it.focusedAt ? 'focusBadge' : 'badge';
     badge.textContent = it.focusedAt ? 'FOCUS' : (it.status || 'ACTIVE');
     title.appendChild(badge);
     item.appendChild(title);
@@ -303,43 +250,39 @@ function render(){
     barWrap.appendChild(bar);
     item.appendChild(barWrap);
 
-    const btnRow = document.createElement('div'); btnRow.className='btnRow';
-    const mkBtn = (text, cls, cb)=>{ const b = document.createElement('button'); b.className=cls||'smallBtn'; b.textContent=text; b.onclick=cb; b.style.margin='6px 8px 6px 0'; return b; };
+    const row = document.createElement('div'); row.className = 'btnRow';
+    const mkBtn = (txt, cb) => { const b = document.createElement('button'); b.className='smallBtn'; b.textContent=txt; b.onclick=cb; b.style.margin='6px 8px 6px 0'; return b; };
 
-    btnRow.appendChild(mkBtn('-10','smallBtn', ()=> safeChangeScore(it.id, -10)));
-    btnRow.appendChild(mkBtn('+10','smallBtn', ()=> safeChangeScore(it.id, +10)));
-    btnRow.appendChild(mkBtn('Focus','smallBtn', ()=> { setFocusOn(it.id); }));
-    btnRow.appendChild(mkBtn('Pause','smallBtn', ()=> { setStatus(it.id,'PAUSED'); }));
-    btnRow.appendChild(mkBtn('Active','smallBtn', ()=> { setStatus(it.id,'ACTIVE'); }));
-    btnRow.appendChild(mkBtn('Delete','smallBtn', ()=> { removeItem(it.id); }));
+    row.appendChild(mkBtn('-10', ()=> safeChangeScore(it.id, -10)));
+    row.appendChild(mkBtn('+10', ()=> safeChangeScore(it.id, +10)));
+    row.appendChild(mkBtn('Focus', ()=> setFocusOn(it.id)));
+    row.appendChild(mkBtn('Pause', ()=> setStatus(it.id, 'PAUSED')));
+    row.appendChild(mkBtn('Active', ()=> setStatus(it.id, 'ACTIVE')));
+    row.appendChild(mkBtn('Delete', ()=> removeItem(it.id)));
 
-    item.appendChild(btnRow);
+    item.appendChild(row);
     list.appendChild(item);
   });
 }
 
-/* safe html escape for names */
-function escapeHtml(s){ return s.replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
-
-/* ===== Init UI wiring ===== */
+/* ===== Wiring UI ===== */
 document.getElementById('addBtn').addEventListener('click', safeAddOrUpdate);
-document.getElementById('clearBtn').addEventListener('click', ()=> { if(confirm("Clear all?")) clearAll(); });
-document.getElementById('decayNowBtn').addEventListener('click', ()=> { runDecay(); showBanner("Decay applied (manual)",1800); });
-document.getElementById('exportBtn').addEventListener('click', exportJSON);
-document.getElementById('importBtn').addEventListener('click', ()=> document.getElementById('importFile').click() );
-document.getElementById('importFile').addEventListener('change', (e)=> importJSONFile(e.target.files[0]));
+document.getElementById('clearBtn').addEventListener('click', clearAll);
+document.getElementById('decayNowBtn').addEventListener('click', ()=>{ runDecay(); });
 
-document.getElementById('nameIn').addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ safeAddOrUpdate(); } });
+document.getElementById('nameIn').addEventListener('keydown', (e)=>{ if(e.key === 'Enter') safeAddOrUpdate(); });
 
-/* run decay on load, render, and auto-select if needed */
+/* ===== Boot ===== */
 (function boot(){
-  runDecay();
+  runDecay();    // apply decay if needed
+  normalize();
   render();
-  autoSelectIfNone();
+  autoSelectIfNone(); // if nothing focused, auto pick top ones
 })();
 
-/* expose a couple functions to console for quick testing */
-window._rizz = { data, save, runDecay, exportJSON, importJSONFile, addOrUpdate, changeScore } ;
+/* expose for quick debug in console (optional) */
+window._rizz = { data, save, runDecay, render };
+
 </script>
 </body>
 </html>
