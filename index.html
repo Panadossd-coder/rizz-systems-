@@ -1,7 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Rizz System</title>
+  <meta charset="UTF-8">
+  <title>Rizz System Dashboard</title>
   <style>
     body {
       background: #000;
@@ -11,41 +12,41 @@
     }
 
     h1 {
-      margin-bottom: 20px;
+      margin-bottom: 15px;
     }
 
     input {
       padding: 8px;
       border-radius: 6px;
       border: none;
-      margin-right: 5px;
+      margin-right: 6px;
     }
 
     button {
-      padding: 8px 12px;
+      padding: 6px 10px;
       border-radius: 6px;
       border: none;
       cursor: pointer;
-      margin: 2px;
+      margin: 3px;
     }
 
     .person {
-      margin: 15px 0;
+      margin-top: 15px;
     }
 
     .bar-container {
+      width: 100%;
       background: #333;
-      border-radius: 10px;
+      height: 12px;
+      border-radius: 6px;
       overflow: hidden;
-      height: 18px;
       margin: 6px 0;
     }
 
     .bar {
-      background: #00ff88;
       height: 100%;
+      background: #00ff88;
       width: 0%;
-      transition: width 0.3s;
     }
 
     .controls button {
@@ -56,61 +57,75 @@
 </head>
 
 <body>
-  <h1>🔥 Rizz System Dashboard</h1>
 
-  <input id="nameInput" placeholder="Enter name (e.g. Sharifah)">
-  <button onclick="addPerson()">Add / Update</button>
+<h1>🔥 Rizz System Dashboard</h1>
 
-  <div id="list"></div>
+<input id="nameInput" placeholder="Enter name (e.g. Charity)">
+<button onclick="addPerson()">Add / Update</button>
 
-  <script>
-    let people = JSON.parse(localStorage.getItem("rizzPeople")) || [];
+<div id="list"></div>
 
-    function save() {
-      localStorage.setItem("rizzPeople", JSON.stringify(people));
+<script>
+  let people = JSON.parse(localStorage.getItem("rizzPeople")) || [];
+
+  // Remove broken entries automatically
+  people = people.filter(p => p && p.name && typeof p.progress === "number");
+
+  function save() {
+    localStorage.setItem("rizzPeople", JSON.stringify(people));
+  }
+
+  function addPerson() {
+    const name = document.getElementById("nameInput").value.trim();
+    if (!name) {
+      alert("Please enter a name");
+      return;
     }
 
-    function addPerson() {
-      const name = nameInput.value.trim();
-      if (!name) return;
-
-      let existing = people.find(p => p.name === name);
-      if (!existing) {
-        people.push({ name, progress: 0 });
-      }
-
-      nameInput.value = "";
-      save();
-      render();
+    let person = people.find(p => p.name === name);
+    if (!person) {
+      people.push({ name: name, progress: 0 });
     }
 
-    function changeProgress(index, amount) {
-      people[index].progress += amount;
-      if (people[index].progress < 0) people[index].progress = 0;
-      if (people[index].progress > 100) people[index].progress = 100;
-      save();
-      render();
-    }
-
-    function render() {
-      list.innerHTML = "";
-      people.forEach((p, i) => {
-        list.innerHTML += `
-          <div class="person">
-            <strong>${p.name} — ${p.progress}%</strong>
-            <div class="bar-container">
-              <div class="bar" style="width:${p.progress}%"></div>
-            </div>
-            <div class="controls">
-              <button onclick="changeProgress(${i}, -10)">-10</button>
-              <button onclick="changeProgress(${i}, 10)">+10</button>
-            </div>
-          </div>
-        `;
-      });
-    }
-
+    document.getElementById("nameInput").value = "";
+    save();
     render();
-  </script>
+  }
+
+  function changeProgress(index, amount) {
+    people[index].progress += amount;
+    if (people[index].progress < 0) people[index].progress = 0;
+    if (people[index].progress > 100) people[index].progress = 100;
+    save();
+    render();
+  }
+
+  function render() {
+    const list = document.getElementById("list");
+    list.innerHTML = "";
+
+    people.forEach((p, i) => {
+      const div = document.createElement("div");
+      div.className = "person";
+
+      div.innerHTML = `
+        <strong>${p.name} — ${p.progress}%</strong>
+        <div class="bar-container">
+          <div class="bar" style="width:${p.progress}%"></div>
+        </div>
+        <div class="controls">
+          <button onclick="changeProgress(${i}, -10)">-10</button>
+          <button onclick="changeProgress(${i}, 10)">+10</button>
+        </div>
+      `;
+
+      list.appendChild(div);
+    });
+  }
+
+  save();
+  render();
+</script>
+
 </body>
 </html>
