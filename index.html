@@ -1,82 +1,70 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Rizz System Dashboard</title>
 
 <style>
 body {
-  background:#000;
-  color:#fff;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  padding:20px;
+  background: #000;
+  color: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  padding: 20px;
 }
 
-h1 {
-  font-size:32px;
-  margin-bottom:15px;
+h1 { font-size: 34px; }
+
+input, button {
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  margin: 5px 0;
+  font-size: 16px;
 }
 
-input {
-  padding:12px;
-  border-radius:10px;
-  border:none;
-  width:65%;
-  font-size:16px;
-}
+button { background: #eee; }
 
-button {
-  padding:12px 14px;
-  border-radius:10px;
-  border:none;
-  margin:4px;
-  font-size:14px;
-  cursor:pointer;
-}
-
-.primary { background:#eee; }
-.focus { background:#00ff9c; color:#000; }
-.warn {
-  background:#ff3b3b;
-  padding:10px;
-  border-radius:10px;
-  margin-bottom:10px;
-}
-.notice {
-  background:#ffaa00;
-  padding:10px;
-  border-radius:10px;
-  margin-bottom:10px;
-  color:#000;
+.warning {
+  background: orange;
+  color: #000;
+  padding: 12px;
+  border-radius: 10px;
+  margin: 15px 0;
+  font-weight: bold;
 }
 
 .card {
-  margin-top:20px;
+  margin-top: 25px;
+}
+
+.progress {
+  background: #333;
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 6px 0 12px;
 }
 
 .bar {
-  background:#333;
-  height:14px;
-  border-radius:8px;
-  overflow:hidden;
-  margin:6px 0;
+  height: 14px;
+  background: #00ff99;
+  width: 0%;
 }
 
-.fill {
-  background:#00ff9c;
-  height:100%;
+.badge {
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  margin-left: 6px;
 }
 
-.tag {
-  padding:4px 10px;
-  border-radius:8px;
-  font-size:12px;
-  margin-left:10px;
-}
+.ACTIVE { background: #555; }
+.FOCUS { background: #00ff99; color: #000; }
+.PAUSE { background: #ff5555; }
 
-.activeTag { background:#444; }
-.focusTag { background:#00ff9c; color:#000; }
+.controls button {
+  margin: 4px;
+}
 </style>
 </head>
 
@@ -84,117 +72,102 @@ button {
 
 <h1>🔥 Rizz System Dashboard</h1>
 
-<div id="warnings"></div>
+<div id="warningBox"></div>
 
-<input id="nameInput" placeholder="Enter name (e.g. Charity)" />
-<button class="primary" onclick="addPerson()">Add / Update</button>
+<input id="nameInput" placeholder="Enter name (e.g. Charity)">
+<button onclick="addOrUpdate()">Add / Update</button>
 
 <div id="list"></div>
 
 <script>
-let people = JSON.parse(localStorage.getItem("rizz")) || [];
+let data = JSON.parse(localStorage.getItem("rizzData")) || [];
 
 function save() {
-  localStorage.setItem("rizz", JSON.stringify(people));
+  localStorage.setItem("rizzData", JSON.stringify(data));
 }
 
-function normalize() {
-  // Clamp values
-  people.forEach(p => {
-    p.value = Math.max(0, Math.min(100, p.value));
-  });
+function addOrUpdate() {
+  const name = nameInput.value.trim();
+  if (!name) return alert("Enter a name");
 
-  // Auto-focus logic
-  let focused = people.filter(p => p.status === "FOCUS");
-  if (focused.length > 1) {
-    focused.slice(1).forEach(p => p.status = "ACTIVE");
+  let p = data.find(x => x.name === name);
+  if (!p) {
+    data.push({ name, score: 50, status: "ACTIVE" });
   }
-
-  let top = people.reduce((a,b)=> a.value > b.value ? a : b, people[0]);
-  if (top && top.value === 100) {
-    people.forEach(p => p.status = p === top ? "FOCUS" : "ACTIVE");
-  }
-
-  let focus = people.find(p => p.status === "FOCUS");
-  if (focus) {
-    people.forEach(p => {
-      if (p !== focus && p.value > 70) p.value = 70;
-    });
-  }
+  save();
+  nameInput.value = "";
+  render();
 }
 
-function warnings() {
-  const box = document.getElementById("warnings");
-  box.innerHTML = "";
+function adjust(name, val) {
+  let p = data.find(x => x.name === name);
+  p.score = Math.max(0, Math.min(100, p.score + val));
+  save();
+  render();
+}
 
-  let high = people.filter(p => p.value >= 80);
-  if (high.length > 1) {
-    box.innerHTML += `<div class="warn">⚠️ Multiple people above 80%</div>`;
+function setStatus(name, status) {
+  if (status === "FOCUS") {
+    data.forEach(p => p.status = "ACTIVE");
   }
+  let p = data.find(x => x.name === name);
+  p.status = status;
+  save();
+  render();
+}
 
-  if (!people.some(p => p.status === "FOCUS") && people.length > 0) {
-    box.innerHTML += `<div class="notice">ℹ️ No one is Focus — system will auto-select</div>`;
+function del(name) {
+  if (!confirm("Delete " + name + "?")) return;
+  data = data.filter(p => p.name !== name);
+  save();
+  render();
+}
+
+/* 🔮 PREDICTION ENGINE */
+function autoPredict() {
+  let focused = data.find(p => p.status === "FOCUS");
+
+  if (!focused && data.length) {
+    let best = [...data].sort((a,b)=>b.score-a.score)[0];
+    best.status = "FOCUS";
   }
 }
 
 function render() {
-  normalize();
-  save();
-  warnings();
+  autoPredict();
 
-  const list = document.getElementById("list");
+  let warningBox = document.getElementById("warningBox");
+  let hasFocus = data.some(p => p.status === "FOCUS");
+
+  warningBox.innerHTML = !hasFocus
+    ? `<div class="warning">ℹ️ No one is Focus — system auto-selected highest score</div>`
+    : "";
+
   list.innerHTML = "";
 
-  people.forEach((p,i) => {
-    list.innerHTML += `
-    <div class="card">
-      <strong>${p.name} — ${p.value}%</strong>
-      <span class="tag ${p.status==="FOCUS"?"focusTag":"activeTag"}">${p.status}</span>
+  data
+    .sort((a,b)=>b.score-a.score)
+    .forEach(p => {
+      list.innerHTML += `
+      <div class="card">
+        <strong>${p.name} — ${p.score}%</strong>
+        <span class="badge ${p.status}">${p.status}</span>
 
-      <div class="bar"><div class="fill" style="width:${p.value}%"></div></div>
+        <div class="progress">
+          <div class="bar" style="width:${p.score}%"></div>
+        </div>
 
-      <button onclick="change(${i},-10)">-10</button>
-      <button onclick="change(${i},10)">+10</button>
-      <button onclick="setFocus(${i})">Focus</button>
-      <button onclick="pause(${i})">Pause</button>
-      <button onclick="remove(${i})">Delete</button>
-    </div>
-    `;
-  });
-}
-
-function addPerson() {
-  const name = document.getElementById("nameInput").value.trim();
-  if (!name) return;
-
-  let found = people.find(p => p.name.toLowerCase() === name.toLowerCase());
-  if (!found) {
-    people.push({ name, value: 0, status: "ACTIVE" });
-  }
-
-  document.getElementById("nameInput").value = "";
-  render();
-}
-
-function change(i, amt) {
-  people[i].value += amt;
-  render();
-}
-
-function setFocus(i) {
-  people.forEach(p => p.status = "ACTIVE");
-  people[i].status = "FOCUS";
-  render();
-}
-
-function pause(i) {
-  people[i].status = "PAUSED";
-  render();
-}
-
-function remove(i) {
-  people.splice(i,1);
-  render();
+        <div class="controls">
+          <button onclick="adjust('${p.name}',-10)">-10</button>
+          <button onclick="adjust('${p.name}',10)">+10</button>
+          <button onclick="setStatus('${p.name}','FOCUS')">Focus</button>
+          <button onclick="setStatus('${p.name}','PAUSE')">Pause</button>
+          <button onclick="setStatus('${p.name}','ACTIVE')">Active</button>
+          <button onclick="del('${p.name}')">Delete</button>
+        </div>
+      </div>
+      `;
+    });
 }
 
 render();
