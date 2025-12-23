@@ -2,199 +2,236 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Rizz System Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 body {
-  background:#000;
-  color:#fff;
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
-  padding:20px;
+  margin: 0;
+  background: #000;
+  color: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
 }
-h1 { font-size:34px; margin-bottom:10px; }
+
+.container {
+  max-width: 480px;
+  margin: auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 32px;
+  margin-bottom: 10px;
+}
 
 input, button {
-  padding:12px;
-  border-radius:10px;
-  border:none;
-  font-size:16px;
-  margin-right:6px;
-}
-button { cursor:pointer; }
-
-.card { margin:20px 0; }
-
-.bar {
-  width:100%;
-  height:14px;
-  background:#333;
-  border-radius:10px;
-  overflow:hidden;
-  margin:6px 0;
-}
-.fill {
-  height:100%;
-  background:linear-gradient(90deg,#00ff99,#00cc66);
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  font-size: 16px;
 }
 
-.actions button { margin:4px 4px 0 0; }
+input {
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+button {
+  margin: 4px 4px 4px 0;
+  background: #e5e5e5;
+  cursor: pointer;
+}
+
+button.blue { background: #dbeafe; }
+button.red { background: #fecaca; }
+button.green { background: #bbf7d0; }
+
+.banner {
+  background: #facc15;
+  color: #000;
+  padding: 12px;
+  border-radius: 10px;
+  margin-bottom: 15px;
+  display: none;
+}
+
+.card {
+  margin-top: 20px;
+}
+
+.label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 
 .badge {
-  padding:4px 10px;
-  border-radius:8px;
-  font-size:12px;
-  margin-left:8px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
 }
-.focus { background:#00ff99; color:#000; }
-.active { background:#444; }
 
-.warning {
-  background:#ffb300;
-  color:#000;
-  padding:12px;
-  border-radius:10px;
-  margin:15px 0;
-  display:none;
+.focus { background: #22c55e; color: #000; }
+.active { background: #374151; }
+.pause { background: #6b7280; }
+
+.bar {
+  background: #333;
+  height: 12px;
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 6px 0;
+}
+
+.fill {
+  height: 100%;
+  background: linear-gradient(90deg,#22c55e,#4ade80);
+  width: 0%;
 }
 </style>
 </head>
 
 <body>
+<div class="container">
+  <h1>🔥 Rizz System Dashboard</h1>
 
-<h1>🔥 Rizz System Dashboard</h1>
-<div id="warning" class="warning"></div>
+  <div id="banner" class="banner"></div>
 
-<input id="nameInput" placeholder="Enter name (e.g. Charity)">
-<button onclick="addOrUpdate()">Add / Update</button>
+  <input id="nameInput" placeholder="Enter name (e.g. Charity)">
+  <button onclick="addOrUpdate()">Add / Update</button>
 
-<div id="list"></div>
+  <div id="list"></div>
+</div>
 
 <script>
-let data = JSON.parse(localStorage.getItem("rizzData")) || [];
-let lastDecay = Number(localStorage.getItem("lastDecay")) || Date.now();
+const MAX_FOCUS = 2;
+const DECAY_DAYS = 2;
+const STORAGE_KEY = "rizzSystem";
+
+let state = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
 
 function save() {
-  localStorage.setItem("rizzData", JSON.stringify(data));
-  localStorage.setItem("lastDecay", lastDecay);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
-function showWarning(msg) {
-  warning.innerText = msg;
-  warning.style.display = "block";
-}
-function hideWarning() { warning.style.display = "none"; }
-
-function focusedCount() {
-  return data.filter(p => p.state === "FOCUS").length;
-}
-
-function removeOldestFocus() {
-  const idx = data.findIndex(p => p.state === "FOCUS");
-  if (idx !== -1) data[idx].state = "ACTIVE";
+function showBanner(text) {
+  const b = document.getElementById("banner");
+  b.innerText = text;
+  b.style.display = "block";
+  setTimeout(() => b.style.display = "none", 4000);
 }
 
 function addOrUpdate() {
   const name = nameInput.value.trim();
   if (!name) return;
 
-  let p = data.find(x => x.name === name);
+  let p = state.find(x => x.name === name);
   if (!p) {
-    data.push({ name, score: 50, state: "ACTIVE" });
+    state.push({
+      name,
+      score: 0,
+      status: "active",
+      updated: Date.now()
+    });
   }
   nameInput.value = "";
-  autoFocus();
+  save();
+  enforceRules();
+  render();
+}
+
+function adjust(name, delta) {
+  const p = state.find(x => x.name === name);
+  if (!p) return;
+  p.score = Math.max(0, Math.min(100, p.score + delta));
+  p.updated = Date.now();
+  enforceRules();
   save();
   render();
 }
 
-function adjust(name, val) {
-  const p = data.find(x => x.name === name);
-  p.score = Math.max(0, Math.min(100, p.score + val));
-  autoFocus();
+function setStatus(name, status) {
+  const p = state.find(x => x.name === name);
+  if (!p) return;
+  p.status = status;
+  p.updated = Date.now();
+  enforceRules();
   save();
   render();
 }
 
-function setFocus(name) {
-  const p = data.find(x => x.name === name);
-  if (p.state === "FOCUS") return;
-
-  if (focusedCount() >= 2) {
-    removeOldestFocus();
-    showWarning("⚠️ Focus limit reached — oldest focus removed");
-  } else hideWarning();
-
-  p.state = "FOCUS";
+function removePerson(name) {
+  state = state.filter(x => x.name !== name);
   save();
   render();
 }
 
-function setState(name, state) {
-  const p = data.find(x => x.name === name);
-  p.state = state;
-  hideWarning();
-  save();
-  render();
+function applyDecay() {
+  const now = Date.now();
+  state.forEach(p => {
+    const days = (now - p.updated) / (1000 * 60 * 60 * 24);
+    if (days >= DECAY_DAYS && p.status !== "focus") {
+      p.score = Math.max(0, p.score - 10);
+      p.updated = now;
+    }
+  });
 }
 
-function del(name) {
-  data = data.filter(p => p.name !== name);
-  save();
-  render();
-}
+function enforceRules() {
+  applyDecay();
 
-function autoFocus() {
-  const candidates = data.filter(p => p.score >= 90 && p.state !== "FOCUS");
-  for (let p of candidates) {
-    if (focusedCount() < 2) {
-      p.state = "FOCUS";
-      showWarning(`⚡ Auto-Focus: ${p.name} reached ${p.score}%`);
+  // Auto-focus >=90
+  state.forEach(p => {
+    if (p.score >= 90) p.status = "focus";
+  });
+
+  let focused = state.filter(p => p.status === "focus");
+
+  if (focused.length > MAX_FOCUS) {
+    focused.sort((a,b) => a.score - b.score);
+    while (focused.length > MAX_FOCUS) {
+      const demoted = focused.shift();
+      demoted.status = "active";
+      showBanner("⚠ Focus limit reached — lowest focus auto-demoted");
     }
   }
-}
 
-function decaySystem() {
-  const TWO_DAYS = 1000 * 60 * 60 * 24 * 2;
-  const now = Date.now();
-  const diff = now - lastDecay;
-
-  if (diff >= TWO_DAYS) {
-    const cycles = Math.floor(diff / TWO_DAYS);
-    data.forEach(p => {
-      if (p.state === "ACTIVE") p.score = Math.max(0, p.score - 5 * cycles);
-      if (p.state === "PAUSE")  p.score = Math.max(0, p.score - 2 * cycles);
-    });
-    lastDecay = now;
-    save();
+  if (focused.length === 0 && state.length) {
+    state.sort((a,b) => b.score - a.score);
+    state[0].status = "focus";
+    showBanner("ℹ No Focus set — system auto-selected");
   }
 }
 
 function render() {
+  const list = document.getElementById("list");
   list.innerHTML = "";
-  data.forEach(p => {
+
+  state.sort((a,b) => b.score - a.score);
+
+  state.forEach(p => {
     const div = document.createElement("div");
     div.className = "card";
+
     div.innerHTML = `
-      <strong>${p.name} — ${p.score}%</strong>
-      <span class="badge ${p.state === "FOCUS" ? "focus" : "active"}">${p.state}</span>
-      <div class="bar"><div class="fill" style="width:${p.score}%"></div></div>
-      <div class="actions">
-        <button onclick="adjust('${p.name}',-10)">-10</button>
-        <button onclick="adjust('${p.name}',10)">+10</button>
-        <button onclick="setFocus('${p.name}')">Focus</button>
-        <button onclick="setState('${p.name}','PAUSE')">Pause</button>
-        <button onclick="setState('${p.name}','ACTIVE')">Active</button>
-        <button onclick="del('${p.name}')">Delete</button>
+      <div class="label">
+        <strong>${p.name} — ${p.score}%</strong>
+        <span class="badge ${p.status}">${p.status.toUpperCase()}</span>
       </div>
+      <div class="bar"><div class="fill" style="width:${p.score}%"></div></div>
+      <button onclick="adjust('${p.name}',-10)">-10</button>
+      <button onclick="adjust('${p.name}',10)">+10</button>
+      <button class="blue" onclick="setStatus('${p.name}','focus')">Focus</button>
+      <button onclick="setStatus('${p.name}','pause')">Pause</button>
+      <button onclick="setStatus('${p.name}','active')">Active</button>
+      <button class="red" onclick="removePerson('${p.name}')">Delete</button>
     `;
     list.appendChild(div);
   });
 }
 
-decaySystem();
+enforceRules();
 render();
 </script>
-
 </body>
 </html>
