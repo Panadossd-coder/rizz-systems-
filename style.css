@@ -1,106 +1,120 @@
-body {
-  margin: 0;
-  background: #000;
-  color: #fff;
-  font-family: system-ui, sans-serif;
+:root{
+  --bg:#000;
+  --card:#0f1112;
+  --accent:#00d08a;
+  --btn:#e9f1f8;
+  --muted:#9aa3ad;
+  --danger:#ff8a8a;
 }
 
-.wrap {
-  max-width: 700px;
-  margin: auto;
-  padding: 20px;
+html,body{
+  margin:0;
+  background:var(--bg);
+  color:#fff;
+  font-family:system-ui, -apple-system, BlinkMacSystemFont;
 }
 
-h1 {
-  font-size: 32px;
+.wrap{
+  max-width:760px;
+  margin:auto;
+  padding:20px;
 }
 
-.controls {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-bottom: 20px;
+h1{
+  font-size:34px;
+  margin-bottom:18px;
 }
 
-input {
-  flex: 1;
-  padding: 14px;
-  border-radius: 14px;
-  border: none;
+.controls{
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
 }
 
-button {
-  padding: 12px 16px;
-  border-radius: 14px;
-  border: none;
-  cursor: pointer;
-  background: #e9f1f8;
-  color: #0b66d1;
+.input{
+  flex:1;
+  padding:14px;
+  border-radius:14px;
+  border:none;
 }
 
-button.dark {
-  background: #1b1c1d;
-  color: #9fb8ff;
+.btn{
+  padding:12px 16px;
+  border-radius:12px;
+  border:none;
+  background:var(--btn);
+  cursor:pointer;
 }
 
-.card {
-  background: #0f1112;
-  border-radius: 16px;
-  padding: 16px;
-  margin-bottom: 14px;
+.btn-dark{
+  background:#1b1c1d;
+  color:#9fb8ff;
 }
 
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.card{
+  background:var(--card);
+  border-radius:16px;
+  padding:16px;
+  margin-top:16px;
 }
 
-.focus {
-  background: #00d08a;
-  color: #00261a;
-  padding: 6px 10px;
-  border-radius: 10px;
-  font-weight: bold;
+.row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
 }
 
-.status {
-  background: #2b2d2e;
-  color: #cbd3d9;
-  padding: 6px 10px;
-  border-radius: 10px;
+.badge{
+  background:var(--accent);
+  padding:6px 12px;
+  border-radius:10px;
+  font-weight:700;
 }
 
-.bar {
-  height: 12px;
-  background: #232425;
-  border-radius: 8px;
-  overflow: hidden;
-  margin: 10px 0;
+.progress{
+  height:12px;
+  background:#222;
+  border-radius:8px;
+  overflow:hidden;
+  margin:10px 0;
 }
 
-.fill {
-  height: 100%;
-  background: linear-gradient(90deg, #00d08a, #20c98f);
+.bar{
+  height:100%;
+  background:linear-gradient(90deg,#00d08a,#1affb0);
 }
 
-.actions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
+.controls-row{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
 }
 
-.actions button {
-  background: #0f1720;
-  color: #9fb8ff;
+.action{
+  background:#0f1720;
+  color:#9fb8ff;
+  border:none;
+  padding:10px 14px;
+  border-radius:12px;
+  cursor:pointer;
 }
 
-.actions .danger {
-  background: #ff8a8a;
-  color: #400;
+.danger{
+  background:var(--danger);
+  color:#400;
 }
 
-.note {
-  color: #9aa3ad;
-  margin-top: 20px;
+.alert{
+  margin:12px 0;
+  padding:12px;
+  border-radius:12px;
+  background:#ffb020;
+  color:#000;
+}
+
+.hidden{ display:none }
+
+.note{
+  color:var(--muted);
+  margin-top:20px;
 }
