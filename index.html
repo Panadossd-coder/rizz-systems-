@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>🔥 Rizz System — Version 1 (Phase A)</title>
+
+<style>
+  body {
+    margin: 0;
+    background: #000;
+    color: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  .container {
+    max-width: 420px;
+    margin: auto;
+    padding: 20px;
+  }
+  h1 {
+    font-size: 28px;
+    margin-bottom: 12px;
+  }
+  input {
+    width: 100%;
+    padding: 14px;
+    border-radius: 14px;
+    border: none;
+    margin-bottom: 10px;
+    font-size: 16px;
+  }
+  button {
+    padding: 10px 14px;
+    border-radius: 12px;
+    border: none;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .btn {
+    background: #1e90ff;
+    color: #fff;
+  }
+  .btn.gray {
+    background: #333;
+  }
+  .card {
+    background: #111;
+    border-radius: 18px;
+    padding: 14px;
+    margin-top: 16px;
+  }
+  .bar {
+    height: 10px;
+    background: #222;
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 10px 0;
+  }
+  .bar span {
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg,#00ffa3,#00cc88);
+  }
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .focus {
+    background: #00cc88;
+    color: #000;
+  }
+  .active {
+    background: #555;
+  }
+  .delete {
+    background: #ff5c5c;
+    color: #000;
+  }
+  small {
+    color: #aaa;
+  }
+  img.thumb {
+    width: 80px;
+    border-radius: 10px;
+    margin-top: 8px;
+  }
+</style>
+</head>
+
+<body>
+<div class="container">
+  <h1>🔥 Rizz System — Version 1 (Phase A)</h1>
+
+  <input id="nameInput" placeholder="Add name (e.g. Charity)" />
+  <button class="btn" onclick="addOrUpdate()">Add / Update</button>
+  <button class="btn gray" onclick="runDecay()">Run Decay (test)</button>
+
+  <div id="list"></div>
+
+  <small>
+    +10 / −10 clamps 0–100.  
+    Focus limit = 2.  
+    Auto-focus at ≥90%.  
+    Decay −10 every 2 days (real time).
+  </small>
+</div>
+
+<script>
+const STORAGE_KEY = "rizz_v1_phaseA";
+let people = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(people));
+}
+
+function focusedCount() {
+  return people.filter(p => p.focused).length;
+}
+
+function addOrUpdate() {
+  const name = document.getElementById("nameInput").value.trim();
+  if (!name) return;
+
+  let p = people.find(x => x.name === name);
+  if (!p) {
+    p = {
+      name,
+      score: 0,
+      focused: false,
+      paused: false,
+      lastUpdate: Date.now(),
+      image: null
+    };
+    people.push(p);
+  }
+  save();
+  render();
+  document.getElementById("nameInput").value = "";
+}
+
+function adjust(name, delta) {
+  const p = people.find(x => x.name === name);
+  if (!p) return;
+
+  p.score = Math.max(0, Math.min(100, p.score + delta));
+  p.lastUpdate = Date.now();
+
+  // AUTO-FOCUS LOGIC (FIXED)
+  if (p.score >= 90 && !p.focused) {
+    autoFocus(p);
+  }
+
+  save();
+  render();
+}
+
+function autoFocus(p) {
+  const focused = people.filter(x => x.focused);
+  if (focused.length >= 2) {
+    focused.sort((a,b) => a.lastUpdate - b.lastUpdate)[0].focused = false;
+  }
+  p.focused = true;
+}
+
+function toggleFocus(name) {
+  const p = people.find(x => x.name === name);
+  if (!p) return;
+
+  if (!p.focused && focusedCount() >= 2) return;
+  p.focused = !p.focused;
+  p.lastUpdate = Date.now();
+  save();
+  render();
+}
+
+function togglePause(name) {
+  const p = people.find(x => x.name === name);
+  p.paused = !p.paused;
+  save();
+  render();
+}
+
+function remove(name) {
+  people = people.filter(p => p.name !== name);
+  save();
+  render();
+}
+
+function attachImage(name) {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = "image/*";
+  input.onchange = e => {
+    const file = e.target.files[0];
+    const reader = new FileReader();
+    reader.onload = () => {
+      const p = people.find(x => x.name === name);
+      p.image = reader.result;
+      save();
+      render();
+    };
+    reader.readAsDataURL(file);
+  };
+  input.click();
+}
+
+function runDecay() {
+  const now = Date.now();
+  people.forEach(p => {
+    if (p.paused) return;
+    const days = (now - p.lastUpdate) / (1000*60*60*24);
+    if (days >= 2) {
+      const steps = Math.floor(days / 2);
+      p.score = Math.max(0, p.score - steps * 10);
+      p.lastUpdate = now;
+      if (p.score < 90) p.focused = false;
+    }
+  });
+  save();
+  render();
+}
+
+function prediction(score) {
+  if (score >= 90) return "Very Likely";
+  if (score >= 70) return "Possible";
+  if (score >= 50) return "Unlikely";
+  return "Low Chance";
+}
+
+function render() {
+  const el = document.getElementById("list");
+  el.innerHTML = "";
+
+  people.forEach(p => {
+    const card = document.createElement("div");
+    card.className = "card";
+
+    card.innerHTML = `
+      <strong>${p.name} — ${p.score}%</strong>
+      ${p.focused ? '<span class="focus"> FOCUS </span>' : p.paused ? '<span class="active"> PAUSED </span>' : '<span class="active"> ACTIVE </span>'}
+
+      <div class="bar"><span style="width:${p.score}%"></span></div>
+
+      <div class="row">
+        <button onclick="adjust('${p.name}',-10)">-10</button>
+        <button onclick="adjust('${p.name}',10)">+10</button>
+        <button onclick="toggleFocus('${p.name}')">${p.focused?'Unfocus':'Focus'}</button>
+        <button onclick="togglePause('${p.name}')">${p.paused?'Resume':'Pause'}</button>
+        <button onclick="attachImage('${p.name}')">📷 Attach</button>
+        <button class="delete" onclick="remove('${p.name}')">Delete</button>
+      </div>
+
+      <small>Prediction: ${prediction(p.score)}</small>
+      ${p.image ? `<br><img class="thumb" src="${p.image}">` : ""}
+    `;
+
+    el.appendChild(card);
+  });
+}
+
+render();
+</script>
+</body>
+</html>
