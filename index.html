@@ -7,64 +7,47 @@
 
 <style>
 body {
-  background:#000;
-  color:#fff;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  padding:20px;
+  background: #000;
+  color: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  padding: 20px;
 }
-
-h1 { font-size:32px; }
-
-input {
-  width:100%;
-  padding:14px;
-  border-radius:14px;
-  border:none;
-  margin-bottom:10px;
+h1 { font-size: 32px; }
+input, button {
+  padding: 12px;
+  border-radius: 12px;
+  border: none;
+  margin: 5px;
 }
-
-button {
-  padding:12px 16px;
-  border-radius:14px;
-  border:none;
-  margin:6px 6px 6px 0;
-  font-weight:600;
+button { cursor: pointer; }
+.card {
+  margin: 20px 0;
 }
-
-.primary { background:#e5e5e5; color:#000; }
-.warn { background:#fbbf24; color:#000; }
-.focus { background:#22c55e; color:#000; }
-.gray { background:#333; color:#ccc; }
-
 .bar {
-  height:14px;
-  border-radius:10px;
-  background:#333;
-  overflow:hidden;
-  margin:6px 0 10px;
+  height: 10px;
+  background: #222;
+  border-radius: 10px;
+  overflow: hidden;
 }
-
 .fill {
-  height:100%;
-  background:linear-gradient(90deg,#22c55e,#00ff99);
+  height: 100%;
+  background: linear-gradient(90deg,#00ff9d,#00cc88);
 }
-
-.card { margin-bottom:30px; }
-
-.badge {
-  display:inline-block;
-  padding:6px 12px;
-  border-radius:12px;
-  font-size:13px;
-  margin-left:10px;
+.tag {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 10px;
+  margin-left: 8px;
+  font-size: 12px;
 }
-
-.notice {
-  background:#fbbf24;
+.focus { background:#00ff9d; color:#000; }
+.active { background:#444; }
+.warning {
+  background:#ffb300;
   color:#000;
-  padding:14px;
-  border-radius:14px;
-  margin-bottom:15px;
+  padding:10px;
+  border-radius:12px;
+  margin:15px 0;
 }
 </style>
 </head>
@@ -73,131 +56,124 @@ button {
 
 <h1>🔥 Rizz System Dashboard</h1>
 
-<div id="notice"></div>
+<div id="warning"></div>
 
-<input id="nameInput" placeholder="Enter name (e.g. Charity)" />
-
-<button class="primary" onclick="addPerson()">Add / Update</button>
-<button class="primary" onclick="clearAll()">Clear All</button>
-<button class="primary" onclick="runDecay(true)">Run Decay (test)</button>
+<input id="nameInput" placeholder="Enter name"/>
+<button onclick="addPerson()">Add / Update</button>
 
 <div id="list"></div>
 
 <script>
-const FOCUS_LIMIT = 2;
-const DECAY_DAYS = 2;
+const DECAY_HOURS = 48;
 const DECAY_AMOUNT = 10;
+const FOCUS_LIMIT = 2;
 
-let people = JSON.parse(localStorage.getItem("rizzData")) || {};
-let lastDecay = Number(localStorage.getItem("lastDecay")) || Date.now();
+let people = JSON.parse(localStorage.getItem("rizzData") || "[]");
 
 function save() {
   localStorage.setItem("rizzData", JSON.stringify(people));
-  localStorage.setItem("lastDecay", lastDecay);
+}
+
+function now() {
+  return Date.now();
+}
+
+function clamp(v) {
+  return Math.max(0, Math.min(100, v));
 }
 
 function addPerson() {
   const name = nameInput.value.trim();
   if (!name) return show("Please enter a name");
-  if (!people[name]) {
-    people[name] = { score:0, focus:false, focusTime:0, status:"ACTIVE" };
-    show("Added " + name);
+
+  let p = people.find(x => x.name === name);
+  if (!p) {
+    people.push({
+      name,
+      score: 0,
+      status: "active",
+      focused: false,
+      lastUpdate: now()
+    });
   }
-  nameInput.value="";
+  nameInput.value = "";
   save();
   render();
 }
 
-function changeScore(name, delta) {
-  people[name].score = Math.max(0, Math.min(100, people[name].score + delta));
-  autoFocusCheck(name);
+function adjust(name, delta) {
+  const p = people.find(x => x.name === name);
+  p.score = clamp(p.score + delta);
+  p.lastUpdate = now();
   save();
   render();
 }
 
 function toggleFocus(name) {
-  people[name].focus = true;
-  people[name].focusTime = Date.now();
-  enforceFocusLimit();
-  save();
-  render();
-}
+  const focused = people.filter(p => p.focused);
+  const p = people.find(x => x.name === name);
 
-function enforceFocusLimit() {
-  const focused = Object.entries(people)
-    .filter(([_,p]) => p.focus)
-    .sort((a,b)=>a[1].focusTime - b[1].focusTime);
-
-  while (focused.length > FOCUS_LIMIT) {
-    const [oldest] = focused.shift();
-    people[oldest].focus = false;
+  if (!p.focused && focused.length >= FOCUS_LIMIT) {
+    focused[0].focused = false;
     show("Focus limit reached — oldest focus removed");
   }
+
+  p.focused = !p.focused;
+  p.lastUpdate = now();
+  save();
+  render();
 }
 
-function autoFocusCheck(name) {
-  if (people[name].score >= 90 && !people[name].focus) {
-    toggleFocus(name);
-    show("Auto-Focus: reached 90%");
-  }
+function deletePerson(name) {
+  people = people.filter(p => p.name !== name);
+  save();
+  render();
 }
 
-function runDecay(force=false) {
-  const now = Date.now();
-  if (!force && now - lastDecay < DECAY_DAYS*86400000) return;
-  Object.values(people).forEach(p=>{
-    if (!p.focus && p.score>0) {
-      p.score = Math.max(0, p.score - DECAY_AMOUNT);
+function runDecay() {
+  const current = now();
+
+  people.forEach(p => {
+    if (p.focused || p.status !== "active") return;
+
+    const hoursPassed = (current - p.lastUpdate) / (1000 * 60 * 60);
+    if (hoursPassed >= DECAY_HOURS) {
+      p.score = clamp(p.score - DECAY_AMOUNT);
+      p.lastUpdate = current;
     }
   });
-  lastDecay = now;
-  save();
-  render();
-}
 
-function clearAll() {
-  if (!confirm("Clear everything?")) return;
-  people = {};
-  save();
-  render();
-}
-
-function removePerson(name) {
-  delete people[name];
   save();
   render();
 }
 
 function show(msg) {
-  notice.innerHTML = `<div class="notice">${msg}</div>`;
-  setTimeout(()=>notice.innerHTML="",3000);
+  warning.innerHTML = `<div class="warning">${msg}</div>`;
+  setTimeout(() => warning.innerHTML = "", 2500);
 }
 
 function render() {
-  enforceFocusLimit();
   list.innerHTML = "";
-  Object.entries(people).forEach(([name,p])=>{
+  people.forEach(p => {
     list.innerHTML += `
-    <div class="card">
-      <strong>${name} — ${p.score}%</strong>
-      <span class="badge ${p.focus?'focus':'gray'}">${p.focus?'FOCUS':p.status}</span>
-      <div class="bar"><div class="fill" style="width:${p.score}%"></div></div>
-      <button onclick="changeScore('${name}',-10)">-10</button>
-      <button onclick="changeScore('${name}',10)">+10</button>
-      <button onclick="toggleFocus('${name}')">Focus</button>
-      <button onclick="people['${name}'].focus=false;save();render()">Pause</button>
-      <button onclick="removePerson('${name}')">Delete</button>
-    </div>`;
+      <div class="card">
+        <strong>${p.name} — ${p.score}%</strong>
+        ${p.focused ? `<span class="tag focus">FOCUS</span>` : `<span class="tag active">ACTIVE</span>`}
+        <div class="bar"><div class="fill" style="width:${p.score}%"></div></div>
+        <button onclick="adjust('${p.name}',-10)">-10</button>
+        <button onclick="adjust('${p.name}',10)">+10</button>
+        <button onclick="toggleFocus('${p.name}')">Focus</button>
+        <button onclick="deletePerson('${p.name}')">Delete</button>
+      </div>
+    `;
   });
 }
 
-runDecay();
+// ⏱️ SAFE decay timer (runs once)
+setInterval(runDecay, 1000 * 60 * 60); // check hourly
+
 render();
 </script>
-
-<p style="color:#777;font-size:13px">
-Tip: +10/-10 clamps 0–100. Focus limit = 2. Decay every 2 days.
-</p>
 
 </body>
 </html>
