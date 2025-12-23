@@ -4,9 +4,9 @@
   <title>Rizz System</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #111;
+      background: #000;
       color: #fff;
+      font-family: Arial, sans-serif;
       padding: 20px;
     }
     input, button {
@@ -19,28 +19,48 @@
     }
   </style>
 </head>
+
 <body>
+  <h1>🔥 Rizz System Dashboard</h1>
 
-<h1>🔥 Rizz System Dashboard</h1>
+  <input id="nameInput" placeholder="Enter name (e.g. Sharifah)">
+  <br>
+  <button onclick="addPerson()">Add / Update</button>
 
-<input id="nameInput" placeholder="Enter name (e.g. Sharifah)">
-<br>
-<button onclick="addPerson()">Add / Update</button>
+  <ul id="list"></ul>
 
-<ul id="list"></ul>
+  <script>
+    let people = JSON.parse(localStorage.getItem("rizzPeople")) || [];
 
-<script>
-  const list = document.getElementById("list");
+    function save() {
+      localStorage.setItem("rizzPeople", JSON.stringify(people));
+    }
 
-  function addPerson() {
-    const name = document.getElementById("nameInput").value;
-    if (!name) return;
-    const li = document.createElement("li");
-    li.textContent = name;
-    list.appendChild(li);
-    document.getElementById("nameInput").value = "";
-  }
-</script>
+    function render() {
+      const list = document.getElementById("list");
+      list.innerHTML = "";
+      people.forEach(name => {
+        const li = document.createElement("li");
+        li.textContent = name;
+        list.appendChild(li);
+      });
+    }
 
+    function addPerson() {
+      const input = document.getElementById("nameInput");
+      const name = input.value.trim();
+      if (!name) return;
+
+      if (!people.includes(name)) {
+        people.push(name);
+        save();
+        render();
+      }
+
+      input.value = "";
+    }
+
+    render();
+  </script>
 </body>
 </html>
