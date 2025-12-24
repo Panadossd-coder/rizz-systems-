@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>🔥 Rizz System — Version 1 (Phase A)</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="wrap" role="main">
+    <header class="header">
+      <h1>🔥 Rizz System — Version 1 <span class="muted"> (Phase A)</span></h1>
+      <p class="sub">Focus limit = <strong>2</strong> · Auto-focus ≥90% · Decay −10 every 2 days</p>
+    </header>
+
+    <section class="controls-row">
+      <input id="nameInput" class="input" placeholder="Add name (e.g. Charity)" aria-label="Add name">
+      <div class="btn-group">
+        <button id="addBtn" class="btn primary">Add / Update</button>
+        <button id="decayBtn" class="btn">Run Decay</button>
+      </div>
+    </section>
+
+    <section class="controls-row">
+      <div class="btn-group">
+        <button id="pauseAll" class="btn">Pause All</button>
+        <button id="resumeAll" class="btn ghost">Resume All</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-top">
+        <div class="phase-title">Phase — <span id="phase">0%</span></div>
+        <div class="bar-wrap" aria-hidden>
+          <div id="phaseBar" class="bar-inner" style="width:0%"></div>
+        </div>
+      </div>
+
+      <div class="card-actions">
+        <button id="decMinus10" class="pill">−10</button>
+        <button id="incPlus10" class="pill">+10</button>
+        <button id="focusBtn" class="pill">Focus / Unfocus</button>
+        <button id="deleteBtn" class="pill danger">Delete Focused</button>
+      </div>
+    </section>
+
+    <section id="list" class="list" aria-live="polite"></section>
+
+    <footer class="status">
+      <div id="statusText" class="muted">Ready</div>
+    </footer>
+  </main>
+
+  <!-- app.js versioned for cache-busting; bump ?v= when you update JS -->
+  <script src="app.js?v=3.0.0"></script>
+</body>
+</html>
