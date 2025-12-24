@@ -1,29 +1,44 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Rizz System — Version 1 (Phase A)</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>🔥 Rizz System — Version 1 (Phase A)</title>
+  <link rel="stylesheet" href="styles.css" />
 </head>
-<body>
 
+<body>
 <div class="wrap">
   <h1>🔥 Rizz System — Version 1 (Phase A)</h1>
 
   <div class="controls">
-    <input id="nameInput" class="input" placeholder="Add name (e.g. Charity)">
+    <input id="nameInput" class="input" placeholder="Add name (e.g. Charity)" />
     <button id="addBtn" class="btn">Add / Update</button>
-    <button id="decayBtn" class="btn btn-dark">Run Decay (test)</button>
+    <button id="decayTest" class="small">Run Decay (test)</button>
   </div>
 
-  <div id="alertBox" class="alert hidden"></div>
+  <div class="top-actions">
+    <button id="pauseAll" class="small">Pause All</button>
+    <button id="resumeAll" class="small hidden">Resume All</button>
+    <div class="pill muted">
+      Focus limit = 2 · Auto-focus ≥90% · Decay −10 every 2 days
+    </div>
+  </div>
 
-  <div id="peopleContainer"></div>
+  <div class="card">
+    <div class="progress-wrap">
+      <strong>Phase — <span id="overallPct">0%</span></strong>
+      <div class="bar">
+        <div id="overallBar" class="bar-inner"></div>
+      </div>
+    </div>
+  </div>
 
-  <p class="note">
-    Focus limit = 2 · Auto-focus at ≥90% · Decay −10 every 2 days
-  </p>
+  <div id="list" class="list"></div>
+
+  <footer>
+    <div id="statusText" class="muted">Idle</div>
+  </footer>
 </div>
 
 <script src="app.js"></script>
