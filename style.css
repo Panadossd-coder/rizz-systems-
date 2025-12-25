@@ -139,8 +139,3 @@ button {
   color: #9aa3ad;
   font-style: italic;
 }
-/* DIM LOW FOCUS */
-.person.dim {
-  opacity: 0.45;
-  filter: grayscale(40%);
-}
