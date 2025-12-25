@@ -1,231 +1,84 @@
-/* =========================
-   RIZZ WEB — VERSION 2.1 UI
-   (Restored v1.1 Layout)
-   ========================= */
+/* Global */
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html,body{height:100%;margin:0;background:#000;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial;}
+.app{max-width:640px;margin:0 auto;padding:20px;}
+h1{font-size:30px;margin:0 0 4px}
+.sub{color:#9aa3ad;margin-bottom:16px}
 
-* {
-  box-sizing: border-box;
+/* Cards / containers */
+.card{background:#0f1112;border-radius:14px;padding:16px;margin-bottom:16px;position:relative;z-index:1}
+.notice{background:transparent;color:#00e59b;padding:6px 0;margin-bottom:8px}
+
+/* Dashboard glow */
+.dashboard-glow{
+  border-radius:18px;
+  background:linear-gradient(180deg, rgba(40,6,24,0.22), rgba(12,12,12,0.8));
+  box-shadow:0 20px 40px rgba(0,0,0,0.6), inset 0 0 60px rgba(255,20,120,0.06);
+  overflow:hidden;
+}
+.dashboard-glow:before{
+  content:"";
+  position:absolute;inset:0;
+  background:radial-gradient(circle at 10% 10%, rgba(255,20,120,0.12), transparent 12%),
+             radial-gradient(circle at 90% 70%, rgba(255,120,200,0.06), transparent 20%);
+  pointer-events:none;
+  z-index:0;
+  mix-blend-mode:screen;
+  animation: pulse 6s ease-in-out infinite;
+}
+@keyframes pulse{0%{opacity:0.9}50%{opacity:1}100%{opacity:0.9}}
+.dashboard-glow h2{margin:0 0 8px;font-size:20px;z-index:1;position:relative}
+
+/* Dashboard items */
+.dash-row{display:block}
+.dash-item{margin:8px 0;color:#fff}
+.dash-label{color:#9aa3ad;margin-right:8px}
+
+/* Form inputs */
+input, textarea { width:100%; margin-top:10px; padding:12px; border-radius:12px; border:none; font-size:15px; background:#fff; color:#111; }
+textarea{resize:none}
+
+/* Status row */
+.section-label{margin-top:12px;color:#9aa3ad}
+.status-row{display:flex;gap:10px;margin-top:8px}
+.status-btn{
+  flex:1;padding:12px;border-radius:12px;background:#1b1d20;border:none;color:#ddd;font-size:15px;transition:all .18s ease;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.5);
+}
+.status-btn:active{transform:translateY(1px)}
+.status-btn.selected{
+  background:linear-gradient(135deg,#ff6db0,#ff2f92);
+  color:#fff; box-shadow:0 12px 30px rgba(255,64,129,0.45);
 }
 
-body {
-  margin: 0;
-  background: radial-gradient(circle at top, #140014, #000);
-  color: #fff;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
-               Roboto, Helvetica, Arial, sans-serif;
-}
+/* Focus controls */
+.focus-controls{display:flex;align-items:center;justify-content:space-between;margin-top:10px}
+.focus-btn{width:72px;height:72px;border-radius:18px;border:none;font-size:36px;background:linear-gradient(135deg,#ff7bbf,#ff4fa3);color:#000;box-shadow:0 18px 40px rgba(255,64,129,0.35);transition:transform .12s ease}
+.focus-btn:active{transform:translateY(2px)}
+.focus-value{font-size:22px;color:#ff7bbf;font-weight:700;text-align:center;flex:1}
 
-.app {
-  max-width: 640px;
-  margin: 0 auto;
-  padding: 20px;
-}
+/* Add button (big and green) */
+#addBtn{display:block;margin-top:14px;padding:14px;border-radius:12px;border:none;font-size:16px;font-weight:800;background:linear-gradient(180deg,#00e59b,#00c97a);color:#000;box-shadow:0 20px 40px rgba(0,200,150,0.25)}
 
-/* -------------------------
-   Headings
--------------------------- */
+/* People cards */
+#peopleList .card{margin-bottom:16px;border:1px solid rgba(255,255,255,0.03)}
+.card.high-focus{border-color:#00e59b}
+.card.low-focus{opacity:0.45}
+.focus-bar{height:8px;background:#1c1f22;border-radius:6px;margin-top:10px;overflow:hidden}
+.focus-fill{height:100%;background:#00e59b;width:0%}
 
-h1 {
-  font-size: 30px;
-  margin-bottom: 4px;
-}
+/* reminder style */
+.reminder{margin-top:10px;padding:12px;border-left:4px solid #ffb020;background:rgba(255,176,32,0.08);color:#ffd8a8;border-radius:6px}
 
-.sub {
-  color: #9aa3ad;
-  font-size: 14px;
-  margin-bottom: 18px;
-}
+/* remove */
+.card button{margin-top:14px;background:#1c1f22;border:none;padding:12px;border-radius:12px;color:#fff}
 
-/* -------------------------
-   Dashboard (Glow + Romance)
--------------------------- */
+/* ensure clickable on mobile (z-index safe) */
+* { -webkit-user-select: none; -webkit-touch-callout: none; }
+button, input, textarea { touch-action: manipulation; }
 
-#dashboard {
-  background: linear-gradient(135deg, rgba(255,0,120,0.15), rgba(0,0,0,0.6));
-  border-radius: 16px;
-  padding: 18px;
-  margin-bottom: 16px;
-  box-shadow:
-    0 0 25px rgba(255,0,120,0.35),
-    inset 0 0 20px rgba(255,255,255,0.04);
-  animation: dashboardGlow 4s ease-in-out infinite;
-}
-
-@keyframes dashboardGlow {
-  0% { box-shadow: 0 0 18px rgba(255,0,120,0.25); }
-  50% { box-shadow: 0 0 28px rgba(255,0,120,0.45); }
-  100% { box-shadow: 0 0 18px rgba(255,0,120,0.25); }
-}
-
-.dash-item {
-  margin-top: 8px;
-  font-size: 15px;
-}
-
-.dash-label {
-  color: #ff7ab8;
-  margin-right: 6px;
-}
-
-/* -------------------------
-   Cards
--------------------------- */
-
-.card {
-  background: linear-gradient(180deg, #111, #0b0b0b);
-  border-radius: 14px;
-  padding: 16px;
-  margin-bottom: 14px;
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
-}
-
-.card:hover {
-  transform: translateY(-2px);
-}
-
-/* Dim low focus (RESTORED) */
-.card.low-focus {
-  opacity: 0.45;
-}
-
-/* High focus highlight */
-.card.high-focus {
-  border: 1px solid #00d08a;
-  box-shadow: 0 0 12px rgba(0,208,138,0.35);
-}
-
-/* -------------------------
-   Inputs
--------------------------- */
-
-input, textarea {
-  width: 100%;
-  margin-top: 10px;
-  padding: 12px;
-  border-radius: 10px;
-  border: none;
-  font-size: 15px;
-}
-
-textarea {
-  min-height: 70px;
-}
-
-/* -------------------------
-   STATUS BUTTONS (v1.1 RESTORED)
--------------------------- */
-
-.status-row {
-  display: flex;
-  gap: 10px;
-  margin-top: 10px;
-}
-
-.status-btn {
-  flex: 1;
-  padding: 12px;
-  border-radius: 12px;
-  border: none;
-  background: #1b1b1b;
-  color: #fff;
-  font-size: 15px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.status-btn.selected {
-  background: linear-gradient(135deg, #ff4fa3, #ff7ab8);
-  box-shadow: 0 0 14px rgba(255,79,163,0.45);
-}
-
-/* -------------------------
-   FOCUS CONTROLS (FIXED)
--------------------------- */
-
-.focus-controls {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 14px;
-}
-
-.focus-btn {
-  width: 56px;
-  height: 56px;
-  border-radius: 14px;
-  border: none;
-  font-size: 28px;
-  font-weight: bold;
-  cursor: pointer;
-  background: linear-gradient(135deg, #ff6aa2, #ff8fc7);
-  color: #000;
-  box-shadow: 0 6px 18px rgba(255,106,162,0.45);
-  transition: transform 0.15s ease;
-}
-
-.focus-btn:active {
-  transform: scale(0.95);
-}
-
-.focus-value {
-  font-size: 22px;
-  font-weight: bold;
-  color: #ff9ccc;
-}
-
-/* -------------------------
-   Focus Bar
--------------------------- */
-
-.focus-bar {
-  height: 8px;
-  background: #1c1f22;
-  border-radius: 6px;
-  overflow: hidden;
-  margin-top: 8px;
-}
-
-.focus-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #00d08a, #00ffb3);
-  transition: width 0.3s ease;
-}
-
-/* -------------------------
-   Reminder
--------------------------- */
-
-.reminder {
-  margin-top: 10px;
-  padding: 10px;
-  border-left: 4px solid #ffb020;
-  background: rgba(255,176,32,0.12);
-  font-size: 14px;
-  border-radius: 8px;
-}
-
-/* -------------------------
-   Buttons
--------------------------- */
-
-button.add-btn {
-  width: 100%;
-  margin-top: 14px;
-  padding: 14px;
-  border-radius: 12px;
-  border: none;
-  font-size: 16px;
-  font-weight: 600;
-  background: linear-gradient(135deg, #00d08a, #00ffb3);
-  color: #000;
-}
-
-button.remove-btn {
-  width: 100%;
-  margin-top: 12px;
-  padding: 12px;
-  border-radius: 12px;
-  border: none;
-  background: #2a2a2a;
-  color: #fff;
+/* small screens adjustments */
+@media (max-width:420px){
+  .focus-btn{width:64px;height:64px;font-size:32px}
+  .status-row{flex-direction:column}
 }
