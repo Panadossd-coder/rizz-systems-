@@ -1,31 +1,20 @@
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 body {
   margin: 0;
   background: #000;
   color: #fff;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
-               Roboto, Helvetica, Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial;
 }
 
 .app {
   max-width: 640px;
-  margin: 0 auto;
+  margin: auto;
   padding: 20px;
 }
 
-h1 {
-  font-size: 28px;
-  margin-bottom: 4px;
-}
-
-.sub {
-  color: #9aa3ad;
-  font-size: 14px;
-  margin-bottom: 14px;
-}
+h1 { margin-bottom: 4px; }
+.sub { color: #9aa3ad; margin-bottom: 14px; }
 
 .card {
   background: #0f1112;
@@ -35,18 +24,11 @@ h1 {
 }
 
 .dashboard {
-  border: 1px solid rgba(255,105,180,0.3);
+  border: 1px solid rgba(255,105,180,.3);
   background: radial-gradient(circle at top, #2a0f1c, #0f1112);
 }
 
-.dash-item {
-  margin-top: 6px;
-}
-
-.status {
-  color: #00d08a;
-  font-size: 14px;
-}
+.status { color: #00d08a; }
 
 input, textarea, button {
   width: 100%;
@@ -60,13 +42,7 @@ input, textarea, button {
 button {
   background: #00d08a;
   color: #000;
-  font-weight: 600;
-}
-
-.label {
-  margin-top: 14px;
-  font-size: 13px;
-  color: #9aa3ad;
+  font-weight: 700;
 }
 
 /* STATUS BUTTONS */
@@ -80,21 +56,18 @@ button {
   flex: 1;
   background: #1c1f22;
   color: #fff;
-  border-radius: 12px;
 }
 
 .status-buttons button.active {
   background: linear-gradient(135deg, #ff6aa2, #ff99c8);
   color: #000;
-  font-weight: 700;
 }
 
-/* FOCUS CONTROL */
+/* FOCUS */
 .focus-control {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  margin-top: 10px;
+  align-items: center;
 }
 
 .focus-control button {
@@ -103,7 +76,6 @@ button {
   font-size: 24px;
   background: linear-gradient(135deg, #ff6aa2, #ff99c8);
   color: #000;
-  border-radius: 14px;
 }
 
 #focusValue {
@@ -112,7 +84,15 @@ button {
   color: #ff99c8;
 }
 
-/* CARDS */
+/* PERSON CARDS */
+.person.high {
+  box-shadow: 0 0 18px rgba(0,208,138,.35);
+}
+
+.person.low {
+  opacity: .65;
+}
+
 .focus-bar {
   height: 8px;
   background: #1c1f22;
@@ -126,15 +106,15 @@ button {
 }
 
 .reminder {
-  margin-top: 8px;
-  padding: 8px;
+  margin-top: 6px;
   border-left: 3px solid #ffb020;
-  background: rgba(255,176,32,0.08);
+  padding-left: 8px;
+  color: #ffb020;
   font-size: 13px;
 }
 
 .advice {
-  margin-top: 8px;
+  margin-top: 6px;
   font-size: 13px;
   color: #9aa3ad;
   font-style: italic;
