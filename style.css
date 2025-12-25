@@ -1,0 +1,92 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #000;
+  color: #fff;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont;
+}
+
+.app {
+  max-width: 420px;
+  margin: auto;
+  padding: 16px;
+}
+
+h1 {
+  margin-bottom: 4px;
+}
+
+.sub {
+  color: #9aa3ad;
+  margin-bottom: 16px;
+}
+
+.card {
+  background: #111;
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 14px;
+}
+
+input, textarea, button {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  margin-bottom: 10px;
+  font-size: 16px;
+}
+
+textarea {
+  resize: none;
+}
+
+button {
+  background: #00d084;
+  color: #000;
+  font-weight: 600;
+}
+
+.status-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.status-btn {
+  flex: 1;
+  background: #222;
+  color: #fff;
+}
+
+.status-btn.active {
+  background: #00d084;
+  color: #000;
+}
+
+.focus-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.focus-row button {
+  width: 60px;
+  background: #444;
+  color: #fff;
+}
+
+.person {
+  border: 1px solid #00d084;
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 10px;
+}
+
+.low {
+  opacity: 0.4;
+}
