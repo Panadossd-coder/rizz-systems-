@@ -147,3 +147,37 @@ button {
   opacity: 0.45;
   filter: grayscale(40%);
 }
+/* =========================
+   DASHBOARD ROMANTIC GLOW
+   ========================= */
+.dashboard {
+  position: relative;
+  animation: dashboardFloat 6s ease-in-out infinite;
+  box-shadow:
+    0 0 20px rgba(255,105,180,0.25),
+    0 0 40px rgba(255,105,180,0.15);
+}
+
+/* soft glowing aura */
+.dashboard::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 18px;
+  background: linear-gradient(
+    135deg,
+    rgba(255,105,180,0.35),
+    rgba(255,182,193,0.15),
+    rgba(255,105,180,0.35)
+  );
+  filter: blur(18px);
+  opacity: 0.6;
+  z-index: -1;
+}
+
+/* smooth floating motion */
+@keyframes dashboardFloat {
+  0%   { transform: translateY(0); }
+  50%  { transform: translateY(-6px); }
+  100% { transform: translateY(0); }
+}
