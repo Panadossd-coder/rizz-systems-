@@ -131,3 +131,15 @@ body {
 .add-btn {
   margin-bottom: 80px;
 }
+.add-btn {
+  width: 100%;
+  padding: 16px;
+  font-size: 18px;
+  border-radius: 16px;
+  border: none;
+  background: #00d084;
+  color: #000;
+  position: relative;
+  z-index: 5;
+  touch-action: manipulation;
+}
