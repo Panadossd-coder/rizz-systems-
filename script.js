@@ -125,6 +125,18 @@ function removePerson(i){
   people.splice(i,1);
   save(); render();
 }
+function editStatus(i){
+  const current = people[i].status;
+
+  let next;
+  if (current === "crush") next = "dating";
+  else if (current === "dating") next = "pause";
+  else next = "crush";
+
+  people[i].status = next;
+  save();
+  render();
+}
 
 /* ---------------- SAVE ---------------- */
 function save(){
