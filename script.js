@@ -1,111 +1,130 @@
 const form = document.getElementById("addForm");
 const list = document.getElementById("peopleList");
 
-const dashFocus = document.getElementById("dashFocus");
-const dashPause = document.getElementById("dashPause");
-const dashAction = document.getElementById("dashAction");
-
-const statusBtns = document.querySelectorAll(".status-btn");
-const statusInput = form.status;
-
-const focusValue = document.getElementById("focusValue");
-const focusInput = form.focus;
+const focusValueEl = document.getElementById("focusValue");
+const statusInput = form.querySelector('input[name="status"]');
+const focusInput = form.querySelector('input[name="focus"]');
 
 let focus = 0;
-let people = JSON.parse(localStorage.getItem("rizz_v11")) || [];
+let people = JSON.parse(localStorage.getItem("rizz_people")) || [];
 
-/* STATUS BUTTONS */
-statusBtns.forEach(btn => {
-  btn.onclick = () => {
-    statusBtns.forEach(b => b.classList.remove("active"));
+/* ---------------- STATUS BUTTONS ---------------- */
+document.querySelectorAll(".status-buttons button").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".status-buttons button")
+      .forEach(b => b.classList.remove("active"));
+
     btn.classList.add("active");
     statusInput.value = btn.dataset.status;
-  };
+  });
 });
 
-/* FOCUS BUTTONS */
+// default active
+document.querySelector('.status-buttons button[data-status="crush"]').classList.add("active");
+
+/* ---------------- FOCUS CONTROLS ---------------- */
 document.getElementById("plus").onclick = () => {
   focus = Math.min(100, focus + 10);
-  focusValue.textContent = focus + "%";
-  focusInput.value = focus;
+  updateFocus();
 };
 
 document.getElementById("minus").onclick = () => {
   focus = Math.max(0, focus - 10);
-  focusValue.textContent = focus + "%";
-  focusInput.value = focus;
+  updateFocus();
 };
 
-/* SAVE */
-function save() {
-  localStorage.setItem("rizz_v11", JSON.stringify(people));
+function updateFocus() {
+  focusValueEl.textContent = `${focus}%`;
+  focusInput.value = focus;
 }
 
-/* DASHBOARD */
+/* ---------------- SAVE ---------------- */
+function save() {
+  localStorage.setItem("rizz_people", JSON.stringify(people));
+}
+
+/* ---------------- DASHBOARD ---------------- */
 function updateDashboard() {
-  if (!people.length) {
+  if (people.length === 0) {
     dashFocus.textContent = "—";
     dashPause.textContent = "—";
     dashAction.textContent = "Add someone to begin.";
     return;
   }
 
-  const sorted = [...people].sort((a,b) => b.focus - a.focus);
-  dashFocus.textContent = sorted[0].name;
+  const sorted = [...people].sort((a,b)=>b.focus-a.focus);
+  const focusP = sorted.find(p=>p.focus>=70);
+  const pauseP = sorted.find(p=>p.status==="pause");
 
-  const paused = people.find(p => p.status === "pause");
-  dashPause.textContent = paused ? paused.name : "—";
-
-  dashAction.textContent =
-    sorted[0].focus >= 70
-      ? "High priority. Reach out."
-      : "Maintain balance.";
+  dashFocus.textContent = focusP ? focusP.name : "No high focus";
+  dashPause.textContent = pauseP ? pauseP.name : "—";
+  dashAction.textContent = focusP ? "Reach out or plan a meet." : "Maintain balance.";
 }
 
-/* RENDER */
+/* ---------------- RENDER ---------------- */
 function render() {
   list.innerHTML = "";
 
-  people.forEach((p,i) => {
-    const div = document.createElement("div");
-    div.className = "person" + (p.focus < 40 ? " low" : "");
-    div.innerHTML = `
+  people.forEach((p,i)=>{
+    const card = document.createElement("div");
+    card.className = "card";
+
+    card.innerHTML = `
       <strong>${p.name}</strong><br>
-      ${p.status} — ${p.focus}%<br>
-      ${p.reminder ? "⏰ " + p.reminder + "<br>" : ""}
-      <button>Remove</button>
+      <span class="sub">${p.status}</span>
+
+      <div class="focus-bar">
+        <div class="focus-fill" style="width:${p.focus}%"></div>
+      </div>
+      <div class="sub">${p.focus}% focus</div>
+
+      ${p.reminder ? `<div class="reminder">⏰ ${p.reminder}</div>` : ""}
+      <div class="advice">Keep it steady. No pressure.</div>
+
+      <p>${p.notes || ""}</p>
+      <button onclick="removePerson(${i})">Remove</button>
     `;
-    div.querySelector("button").onclick = () => {
-      people.splice(i,1);
-      save();
-      render();
-    };
-    list.appendChild(div);
+
+    list.appendChild(card);
   });
 
   updateDashboard();
 }
 
-/* ADD */
-form.onsubmit = e => {
+/* ---------------- REMOVE ---------------- */
+function removePerson(i) {
+  people.splice(i,1);
+  save();
+  render();
+}
+
+/* ---------------- ADD ---------------- */
+form.addEventListener("submit", e=>{
   e.preventDefault();
 
+  const name = form.name.value.trim();
+  if (!name) return;
+
   people.push({
-    name: form.name.value,
-    status: form.status.value,
-    focus: Number(form.focus.value),
-    notes: form.notes.value,
-    reminder: form.reminder.value
+    name,
+    status: statusInput.value,
+    focus,
+    notes: form.notes.value.trim(),
+    reminder: form.reminder.value.trim()
   });
 
   save();
   render();
 
+  // RESET (THIS IS THE EXACT PLACE)
   form.reset();
   focus = 0;
-  focusValue.textContent = "0%";
-  focusInput.value = 0;
-  statusBtns.forEach(b => b.classList.remove("active"));
-};
+  updateFocus();
+  statusInput.value = "crush";
+  document.querySelectorAll(".status-buttons button")
+    .forEach(b=>b.classList.remove("active"));
+  document.querySelector('.status-buttons button[data-status="crush"]').classList.add("active");
+});
 
+/* INIT */
 render();
