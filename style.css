@@ -1,114 +1,124 @@
 * {
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
   margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   background: #000;
   color: #fff;
-  font-family: system-ui, -apple-system;
 }
 
 .app {
-  max-width: 430px;
+  max-width: 420px;
   margin: auto;
   padding: 16px;
 }
 
 h1 {
-  margin-bottom: 4px;
+  margin: 0;
 }
 
-.sub {
+.version {
   opacity: 0.6;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .dashboard {
-  background: linear-gradient(135deg, #3a001f, #12000a);
+  background: linear-gradient(135deg, #3b001f, #000);
   border-radius: 16px;
   padding: 16px;
   margin-bottom: 12px;
 }
 
-.status-bar {
-  background: #0f3;
-  color: #000;
-  padding: 10px;
-  border-radius: 12px;
-  font-weight: 600;
-  margin-bottom: 16px;
+.card {
+  background: #111;
+  border-radius: 16px;
+  padding: 16px;
 }
 
-form {
-  background: #111;
-  padding: 16px;
-  border-radius: 16px;
+.status-bar {
+  background: #0a3;
+  color: #000;
+  padding: 8px;
+  border-radius: 12px;
+  text-align: center;
+  margin-bottom: 12px;
 }
 
 input, textarea {
   width: 100%;
-  padding: 14px;
+  padding: 12px;
+  margin-bottom: 10px;
   border-radius: 12px;
   border: none;
-  margin-bottom: 12px;
   font-size: 16px;
 }
 
 .label {
-  margin: 10px 0 6px;
-  opacity: 0.7;
+  margin: 8px 0 4px;
+  opacity: 0.8;
 }
 
 .status-row {
   display: flex;
-  gap: 10px;
-  margin-bottom: 14px;
+  gap: 8px;
+  margin-bottom: 12px;
 }
 
 .status-btn {
   flex: 1;
   padding: 12px;
   border-radius: 12px;
-  border: none;
   background: #222;
   color: #fff;
-  font-size: 15px;
+  border: none;
 }
 
 .status-btn.active {
-  background: #ff5fa2;
+  background: #ff4fa3;
 }
 
 .focus-row {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  margin-bottom: 14px;
+  align-items: center;
+  margin-bottom: 12px;
 }
 
 .focus-row button {
   width: 56px;
   height: 56px;
   border-radius: 14px;
+  font-size: 28px;
   border: none;
-  background: #ff7eb3;
-  font-size: 24px;
+  background: #ff80b5;
+  color: #000;
 }
 
-#addBtn {
+.add-btn {
   width: 100%;
-  padding: 16px;
+  padding: 14px;
+  font-size: 18px;
   border-radius: 14px;
   border: none;
-  background: #00e676;
-  font-size: 18px;
-  font-weight: 700;
+  background: #00d084;
+  color: #000;
 }
 
-.card {
+.person {
   background: #111;
   border-radius: 16px;
   padding: 14px;
   margin-top: 12px;
+  border: 1px solid #0a3;
+}
+
+.remove {
+  margin-top: 8px;
+  width: 100%;
+  padding: 8px;
+  border-radius: 10px;
+  border: none;
 }
