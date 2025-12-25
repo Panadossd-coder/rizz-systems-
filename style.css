@@ -143,3 +143,32 @@ textarea {
   background: #222;
   color: #fff;
 }
+/* 🔥 MOBILE SAFETY FIX — REQUIRED */
+body {
+  padding-bottom: 120px; /* space for Safari toolbar */
+}
+
+.app {
+  padding-bottom: 120px;
+}
+
+/* Ensure everything can be clicked */
+button,
+input,
+textarea {
+  pointer-events: auto;
+  touch-action: manipulation;
+}
+
+/* Prevent iOS zoom / ghost clicks */
+input,
+textarea,
+button {
+  font-size: 16px;
+}
+
+/* Make Add button safe */
+.add-btn {
+  position: relative;
+  z-index: 10;
+}
