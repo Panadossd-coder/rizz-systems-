@@ -1,184 +1,128 @@
+// Rizz Web — Version 2.1 Core
+
 const form = document.getElementById("addForm");
 const list = document.getElementById("peopleList");
 
-const focusValueEl = document.getElementById("focusValue");
-const statusInput = form.querySelector('input[name="status"]');
-const focusInput = form.querySelector('input[name="focus"]');
+const focusDisplay = document.getElementById("focusDisplay");
+const focusPlus = document.getElementById("focusPlus");
+const focusMinus = document.getElementById("focusMinus");
+const statusBtns = document.querySelectorAll(".status-btn");
 
-let focus = 0;
+let focusValue = 0;
 let people = JSON.parse(localStorage.getItem("rizz_people")) || [];
 
-/* ===============================
-   V2.1 — Focus Decay Engine
-   =============================== */
-const DECAY_INTERVAL_MS = 48 * 60 * 60 * 1000; // 48 hours
+// ---------- UI CONTROLS ----------
 
-function now() {
-  return Date.now();
-}
-
-function touch(p) {
-  p.lastTouchedAt = now();
-  if (p.decayNote) delete p.decayNote;
-}
-
-function applyDecay() {
-  let changed = false;
-
-  people.forEach(p => {
-    if (!p.lastTouchedAt) {
-      p.lastTouchedAt = now();
-      return;
-    }
-
-    const elapsed = now() - p.lastTouchedAt;
-
-    if (elapsed >= DECAY_INTERVAL_MS && p.focus > 0) {
-      const drop = p.reminder ? 2 : 5;
-      const newFocus = Math.max(0, p.focus - drop);
-
-      if (newFocus !== p.focus) {
-        p.focus = newFocus;
-        p.decayNote = "Focus adjusted due to inactivity";
-        p.lastTouchedAt = now();
-        changed = true;
-      }
-    }
-  });
-
-  if (changed) save();
-}
-
-/* ===============================
-   UI Controls
-   =============================== */
-document.querySelectorAll(".status-buttons button").forEach(btn => {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll(".status-buttons button")
-      .forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-    statusInput.value = btn.dataset.status;
-  });
-});
-document.querySelector('[data-status="crush"]').classList.add("active");
-
-document.getElementById("plus").onclick = () => {
-  focus = Math.min(100, focus + 10);
-  updateFocus();
-};
-
-document.getElementById("minus").onclick = () => {
-  focus = Math.max(0, focus - 10);
-  updateFocus();
-};
-
+// Focus buttons
 function updateFocus() {
-  focusValueEl.textContent = `${focus}%`;
-  focusInput.value = focus;
+  focusDisplay.textContent = focusValue + "%";
+  form.focus.value = focusValue;
 }
 
-/* ===============================
-   Storage
-   =============================== */
+focusPlus.onclick = () => {
+  focusValue = Math.min(100, focusValue + 10);
+  updateFocus();
+};
+
+focusMinus.onclick = () => {
+  focusValue = Math.max(0, focusValue - 10);
+  updateFocus();
+};
+
+// Status buttons
+statusBtns.forEach(btn => {
+  btn.onclick = () => {
+    statusBtns.forEach(b => b.classList.remove("selected"));
+    btn.classList.add("selected");
+    form.status.value = btn.dataset.status;
+  };
+});
+
+// ---------- LOGIC ----------
+
 function save() {
   localStorage.setItem("rizz_people", JSON.stringify(people));
 }
 
-/* ===============================
-   Dashboard
-   =============================== */
 function updateDashboard() {
-  if (!people.length) {
+  if (people.length === 0) {
     dashFocus.textContent = "—";
     dashPause.textContent = "—";
-    dashAction.textContent = "Add someone to begin.";
+    dashAction.textContent = "—";
     return;
   }
 
-  const sorted = [...people].sort((a,b)=>b.focus-a.focus);
-  const focusP = sorted.find(p=>p.focus>=70);
-  const pauseP = sorted.find(p=>p.status==="pause");
+  const sorted = [...people].sort((a, b) => b.focus - a.focus);
+  const focusPerson = sorted.find(p => p.focus >= 70);
+  const pausePerson = sorted.find(p => p.status === "pause");
 
-  dashFocus.textContent = focusP ? focusP.name : "No high focus";
-  dashPause.textContent = pauseP ? pauseP.name : "—";
-  dashAction.textContent = focusP ? "Reach out or plan a meet." : "Maintain balance.";
+  dashFocus.textContent = focusPerson ? focusPerson.name : "No high focus";
+  dashPause.textContent = pausePerson ? pausePerson.name : "—";
+  dashAction.textContent = focusPerson
+    ? "Reach out or plan a meet."
+    : "Maintain balance.";
 }
 
-/* ===============================
-   Render
-   =============================== */
 function render() {
   list.innerHTML = "";
 
-  people.forEach((p,i)=>{
-    const card = document.createElement("div");
-    card.className = "card";
+  people.forEach((p, i) => {
+    const div = document.createElement("div");
+    div.className = "card person";
 
-    card.innerHTML = `
+    div.innerHTML = `
       <strong>${p.name}</strong><br>
       <span class="sub">${p.status}</span>
 
-      <div class="focus-bar">
-        <div class="focus-fill" style="width:${p.focus}%"></div>
+      <div class="progress">
+        <div class="progress-fill" style="width:${p.focus}%"></div>
       </div>
+
       <div class="sub">${p.focus}% focus</div>
+      ${p.notes ? `<p>${p.notes}</p>` : ""}
 
-      ${p.decayNote ? `<div class="decay-note">⏳ ${p.decayNote}</div>` : ""}
-      ${p.reminder ? `<div class="reminder">⏰ ${p.reminder}</div>` : ""}
-      <div class="advice">Keep it steady. No pressure.</div>
-
-      <p>${p.notes || ""}</p>
-      <button onclick="removePerson(${i})">Remove</button>
+      <button class="remove" onclick="removePerson(${i})">Remove</button>
     `;
 
-    list.appendChild(card);
+    list.appendChild(div);
   });
 
   updateDashboard();
 }
 
-/* ===============================
-   Remove
-   =============================== */
 function removePerson(i) {
-  people.splice(i,1);
+  people.splice(i, 1);
   save();
   render();
 }
 
-/* ===============================
-   Add
-   =============================== */
-form.addEventListener("submit", e=>{
+// ---------- ADD ----------
+form.onsubmit = e => {
   e.preventDefault();
 
-  const name = form.name.value.trim();
-  if (!name) return;
+  if (!form.name.value || !form.status.value) {
+    alert("Name and status required");
+    return;
+  }
 
   people.push({
-    name,
-    status: statusInput.value,
-    focus,
+    name: form.name.value.trim(),
+    status: form.status.value,
+    focus: focusValue,
     notes: form.notes.value.trim(),
-    reminder: form.reminder.value.trim(),
-    lastTouchedAt: now()
+    reminder: form.reminder.value.trim()
   });
 
   save();
   render();
 
+  // reset
   form.reset();
-  focus = 0;
+  focusValue = 0;
   updateFocus();
-  statusInput.value = "crush";
-  document.querySelectorAll(".status-buttons button")
-    .forEach(b=>b.classList.remove("active"));
-  document.querySelector('[data-status="crush"]').classList.add("active");
-});
+  statusBtns.forEach(b => b.classList.remove("selected"));
+};
 
-/* ===============================
-   Init
-   =============================== */
-applyDecay();
+// initial
 updateFocus();
 render();
