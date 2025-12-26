@@ -54,25 +54,34 @@
   <audio id="clickSound" src="click.mp3" preload="auto"></audio>
 
   <!-- EDIT MODAL -->
-  <div id="editModal" class="edit-modal hidden">
-    <div class="edit-box">
-      <h3>Edit Focus</h3>
-      <div id="editName"></div>
+ <!-- EDIT MODAL (replace your old modal block with this) -->
+<div id="editModal" class="edit-modal hidden" aria-hidden="true" role="dialog" aria-modal="true">
+  <div class="edit-box">
+    <h3>Edit</h3>
+
+    <label for="editNameInput" class="sr-only">Name</label>
+    <input id="editNameInput" type="text" placeholder="Name" />
+
+    <label for="editStatusSelect" class="sr-only">Status</label>
+    <select id="editStatusSelect" aria-label="Status">
+      <option value="crush">💘 Crush</option>
+      <option value="dating">💞 Dating</option>
+      <option value="pause">⏸ Pause</option>
+    </select>
+
+    <div class="slider-wrap">
       <input type="range" id="editFocus" min="0" max="100" />
       <div id="editFocusValue">0%</div>
-      <div class="edit-actions">
-        <button onclick="closeEdit()">Cancel</button>
-        <button onclick="saveEdit()">Save</button>
-      </div>
+    </div>
+
+    <div class="edit-actions">
+      <button type="button" onclick="closeEdit()">Cancel</button>
+      <button type="button" onclick="saveEdit()">Save</button>
     </div>
   </div>
+</div>
 
   <script src="script.js"></script>
-  <script>
-if (!sessionStorage.getItem("rizz_refreshed")) {
-  sessionStorage.setItem("rizz_refreshed", "true");
-  location.reload(true);
-}
-</script>
+
 </body>
 </html>
