@@ -153,3 +153,12 @@ textarea {
   gap: 6px;
   border-radius: 999px;
 }
+.status-buttons button {
+  min-width: 90px;
+  height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: 999px;
+}
