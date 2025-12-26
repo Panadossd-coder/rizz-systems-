@@ -232,3 +232,44 @@ button:active,
     transition: none !important;
   }
 }
+
+/* =========================
+   MICRO-BOUNCE BUTTON FEEL
+   Apple-style (SAFE)
+   ========================= */
+
+button,
+.status-buttons button,
+.focus-control button,
+.card-actions button,
+#peopleList button {
+  -webkit-tap-highlight-color: transparent;
+  will-change: transform, box-shadow;
+  transition:
+    transform 0.12s cubic-bezier(.2,1.6,.4,1),
+    box-shadow 0.14s ease,
+    opacity 0.08s ease;
+}
+
+/* instant press */
+button:active,
+.status-buttons button:active,
+.focus-control button:active,
+.card-actions button:active {
+  transform: scale(0.92);
+  opacity: 0.95;
+  transition-duration: 0.05s;
+}
+
+/* micro rebound */
+button:active::after {
+  content: "";
+}
+
+/* soft rebound when finger lifts */
+button:not(:active),
+.status-buttons button:not(:active),
+.focus-control button:not(:active),
+.card-actions button:not(:active) {
+  transform: scale(1);
+}
