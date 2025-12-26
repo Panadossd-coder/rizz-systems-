@@ -236,3 +236,52 @@ button { border-radius: 12px; font-weight: 700; letter-spacing: .2px; }
 .card-actions button {
   flex: 1;
 }
+/* =========================
+   EDIT MODAL (FOCUS SLIDER)
+   ========================= */
+.edit-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.edit-modal.hidden {
+  display: none;
+}
+
+.edit-box {
+  background: #0f1112;
+  border-radius: 16px;
+  padding: 20px;
+  width: 90%;
+  max-width: 320px;
+  text-align: center;
+}
+
+.edit-box h3 {
+  margin-bottom: 10px;
+}
+
+#editFocus {
+  width: 100%;
+  margin: 16px 0;
+}
+
+#editFocusValue {
+  font-weight: 700;
+  color: #ff99c8;
+  margin-bottom: 16px;
+}
+
+.edit-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.edit-actions button {
+  flex: 1;
+}
