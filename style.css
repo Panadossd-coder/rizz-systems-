@@ -158,3 +158,40 @@ textarea {
   border-radius: 14px;
   padding: 10px;
 }
+/* =========================
+   BUTTON SPEED & SMOOTHNESS
+   (SAFE UPGRADE – NO SHAPE CHANGE)
+   ========================= */
+
+button,
+.status-buttons button,
+.focus-control button,
+.card-actions button {
+  transition:
+    transform 0.08s cubic-bezier(.2,.9,.2,1),
+    box-shadow 0.12s ease,
+    background 0.12s ease,
+    opacity 0.08s ease;
+  will-change: transform;
+}
+
+/* hover / finger-ready feel */
+button:hover,
+.status-buttons button:hover,
+.focus-control button:hover {
+  transform: translateY(-2px) scale(1.01);
+}
+
+/* fast tap response */
+button:active,
+.status-buttons button:active,
+.focus-control button:active,
+.card-actions button:active {
+  transform: scale(0.96);
+  opacity: 0.95;
+}
+
+/* remove mobile delay glow */
+button {
+  -webkit-tap-highlight-color: transparent;
+}
