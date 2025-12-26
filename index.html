@@ -7,93 +7,65 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="app">
 
-    <h1>Rizz Web</h1>
-    <div class="sub">Version 2 — Smart Focus</div>
+<div class="app">
 
-    <!-- DASHBOARD -->
-    <div id="dashboard" class="card dashboard">
-      <h3>💘 Today’s Dashboard</h3>
-      <div class="dash-item">🎯 Focus: <span id="dashFocus">—</span></div>
-      <div class="dash-item">⏸ Pause: <span id="dashPause">—</span></div>
-      <div class="dash-item">🧠 Action: <span id="dashAction">Add someone to begin.</span></div>
-      <div class="gloss" aria-hidden="true"></div>
-      <!-- small particles (created visually by CSS) -->
-      <div class="particle" style="left:10%; top:20%;"></div>
-      <div class="particle" style="left:85%; top:78%;"></div>
-      <div class="particle" style="left:60%; top:10%;"></div>
-    </div>
+  <h1>Rizz Web</h1>
+  <div class="sub">Version 2 — Smart Focus</div>
 
-    <div class="card status">✅ Version 2 running</div>
-
-    <!-- FORM -->
-    <form id="addForm" class="card">
-      <input name="name" placeholder="Name" required />
-
-      <div class="label">Status</div>
-      <div class="status-buttons" role="tablist" aria-label="Status">
-        <button type="button" data-status="crush">💘 Crush</button>
-        <button type="button" data-status="dating">💞 Dating</button>
-        <button type="button" data-status="pause">⏸ Pause</button>
-      </div>
-
-      <input type="hidden" name="status" value="crush" />
-
-      <div class="label">Set Focus</div>
-      <div class="focus-control" role="group" aria-label="Set Focus">
-        <button type="button" id="minus" aria-label="Decrease focus">−</button>
-        <span id="focusValue" aria-live="polite">0%</span>
-        <button type="button" id="plus" aria-label="Increase focus">+</button>
-      </div>
-
-      <input type="hidden" name="focus" value="0" />
-
-      <textarea name="notes" placeholder="Notes"></textarea>
-      <input name="reminder" placeholder="Reminder (e.g. Call tonight)" />
-
-      <button type="submit" class="primary-add">Add</button>
-    </form>
-
-    <div id="peopleList"></div>
+  <!-- DASHBOARD -->
+  <div id="dashboard" class="card dashboard">
+    <h3>💘 Today’s Dashboard</h3>
+    <div class="dash-item">🎯 Focus: <span id="dashFocus">—</span></div>
+    <div class="dash-item">⏸ Pause: <span id="dashPause">—</span></div>
+    <div class="dash-item">🧠 Action: <span id="dashAction">Add someone to begin.</span></div>
   </div>
 
-  <!-- click sound -->
-  <audio id="clickSound" src="click.mp3" preload="auto" aria-hidden="true"></audio>
+  <div class="card status">✅ Version 2 running</div>
 
-  <!-- EDIT MODAL -->
-  <div id="editModal" class="edit-modal hidden" aria-hidden="true" role="dialog" aria-modal="true">
-    <div class="edit-box">
-      <h3>Edit</h3>
+  <!-- FORM -->
+  <form id="addForm" class="card">
+    <input name="name" placeholder="Name" required />
 
-      <input id="editNameInput" type="text" placeholder="Name" />
-
-      <select id="editStatusSelect" aria-label="Status">
-        <option value="crush">💘 Crush</option>
-        <option value="dating">💞 Dating</option>
-        <option value="pause">⏸ Pause</option>
-      </select>
-
-      <div class="slider-wrap">
-        <input type="range" id="editFocus" min="0" max="100" />
-        <div id="editFocusValue">0%</div>
-      </div>
-
-      <div class="edit-actions">
-        <button type="button" onclick="closeEdit()">Cancel</button>
-        <button type="button" onclick="saveEdit()" class="primary-add">Save</button>
-      </div>
+    <div class="label">Status</div>
+    <div class="status-buttons">
+      <button type="button" data-status="crush">💘 Crush</button>
+      <button type="button" data-status="dating">💞 Dating</button>
+      <button type="button" data-status="pause">⏸ Pause</button>
     </div>
-  </div>
 
-  <script src="script.js"></script>
+    <input type="hidden" name="status" value="crush" />
 
-  <script>
-    /* ONE-TIME GITHUB CACHE REFRESH */
-    if (!sessionStorage.getItem("rizz_refreshed")) {
-      sessionStorage.setItem("rizz_refreshed", "true");
-      location.reload(true);
-    }
-  </script>
+    <div class="label">Set Focus</div>
+    <div class="focus-control">
+      <button type="button" id="minus">−</button>
+      <span id="focusValue">0%</span>
+      <button type="button" id="plus">+</button>
+    </div>
+
+    <input type="hidden" name="focus" value="0" />
+
+    <textarea name="notes" placeholder="Notes"></textarea>
+    <input name="reminder" placeholder="Reminder (e.g. Call tonight)" />
+
+    <button type="submit" class="add-btn">Add</button>
+  </form>
+
+  <div id="peopleList"></div>
+
+</div>
+
+<audio id="clickSound" src="click.mp3" preload="auto"></audio>
+
+<script src="script.js"></script>
+
+<script>
+/* ONE-TIME GITHUB CACHE REFRESH */
+if (!sessionStorage.getItem("rizz_refreshed")) {
+  sessionStorage.setItem("rizz_refreshed", "true");
+  location.reload(true);
+}
+</script>
+
 </body>
 </html>
