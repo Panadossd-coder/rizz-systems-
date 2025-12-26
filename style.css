@@ -1,16 +1,19 @@
 /* =========================
    Rizz Web — Version 2
-   DARK GLASS + NEON UI
-   UI ONLY — LOGIC LOCKED
+   Dark Glass + Neon (LOCKED)
    ========================= */
 
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
 
 body {
   margin: 0;
-  background: radial-gradient(circle at top, #120017, #000 70%);
+  background: #000;
   color: #fff;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, Helvetica, Arial, sans-serif;
 }
 
 .app {
@@ -22,88 +25,75 @@ body {
 h1 {
   font-size: 28px;
   margin-bottom: 4px;
-  background: linear-gradient(135deg,#ff6aa2,#c77dff,#00f2a0);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
 }
 
 .sub {
-  color: #9aa3ad;
   font-size: 14px;
-  margin-bottom: 16px;
+  color: rgba(255,255,255,0.55);
+  margin-bottom: 14px;
 }
 
 /* =========================
-   GLASS CARD BASE
+   CARD — TRUE DARK GLASS
    ========================= */
 .card {
   background:
-    linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.015)),
-    rgba(15,15,20,0.6);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,0.025),
+      rgba(255,255,255,0.005)
+    ),
+    rgba(12,12,16,0.85);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+
   border-radius: 18px;
   padding: 16px;
   margin-bottom: 14px;
+
   box-shadow:
-    0 18px 50px rgba(0,0,0,0.65),
-    inset 0 1px 0 rgba(255,255,255,0.06);
+    0 18px 45px rgba(0,0,0,0.75),
+    inset 0 1px 0 rgba(255,255,255,0.04);
 }
 
 /* =========================
-   DASHBOARD — NEON GLASS
+   DASHBOARD
    ========================= */
 .dashboard {
-  position: relative;
   padding: 22px;
-  border-radius: 22px;
-  overflow: hidden;
-  background:
-    radial-gradient(circle at top left, rgba(255,105,180,0.25), transparent 55%),
-    radial-gradient(circle at bottom right, rgba(0,242,160,0.18), transparent 60%),
-    rgba(15,15,20,0.55);
-
-  backdrop-filter: blur(22px);
-  -webkit-backdrop-filter: blur(22px);
-
-  box-shadow:
-    0 30px 70px rgba(0,0,0,0.7),
-    0 0 40px rgba(255,105,180,0.12);
 }
 
 .dashboard h3 {
   font-size: 18px;
-  font-weight: 800;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
 .dash-item {
-  margin-top: 8px;
   font-size: 15px;
+  margin-top: 8px;
   display: flex;
   gap: 6px;
   align-items: center;
 }
 
 .dash-item span {
-  font-weight: 800;
   color: #ff9fcf;
-  text-shadow: 0 0 8px rgba(255,105,180,0.4);
+  font-weight: 700;
 }
 
 /* =========================
-   SMALL LABELS (CLEAN)
+   SMALL LABELS (FIX)
    ========================= */
 .label {
-  font-size: 11px;
-  letter-spacing: 0.5px;
+  margin-top: 14px;
+  font-size: 10px;
+  letter-spacing: 0.9px;
   text-transform: uppercase;
-  color: #8b8f9a;
-  margin-top: 16px;
+  color: rgba(255,255,255,0.45);
 }
 
 /* =========================
-   INPUTS — GLASS
+   INPUTS — NO WHITE HAZE
    ========================= */
 input,
 textarea,
@@ -112,20 +102,30 @@ button {
   width: 100%;
   margin-top: 10px;
   padding: 12px;
-  border-radius: 14px;
+  border-radius: 12px;
   border: none;
   font-size: 14px;
-  background: rgba(255,255,255,0.06);
   color: #fff;
+  background: rgba(18,18,22,0.85);
+  box-shadow: none;
 }
 
 textarea {
-  resize: none;
   min-height: 80px;
+  resize: none;
+}
+
+/* iOS autofill KILL */
+input:-webkit-autofill,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0px 1000px rgba(10,10,14,0.9) inset !important;
+  -webkit-text-fill-color: #fff !important;
+  transition: background-color 9999s ease-in-out 0s;
 }
 
 /* =========================
-   STATUS BUTTONS — NEON
+   STATUS BUTTONS
    ========================= */
 .status-buttons {
   display: flex;
@@ -135,101 +135,111 @@ textarea {
 
 .status-buttons button {
   flex: 1;
-  background: rgba(255,255,255,0.05);
-  border-radius: 16px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 14px;
   font-weight: 600;
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
 }
 
 .status-buttons button.active {
-  background: linear-gradient(135deg,#ff6aa2,#c77dff);
+  background: linear-gradient(135deg, #ff6aa2, #ff99c8);
   color: #000;
-  font-weight: 900;
-  box-shadow:
-    0 0 18px rgba(255,105,180,0.6),
-    0 0 32px rgba(199,125,255,0.35);
+  box-shadow: 0 0 18px rgba(255,105,180,0.45);
 }
 
 /* =========================
-   FOCUS CONTROLS — NEON
+   FOCUS CONTROL
    ========================= */
 .focus-control {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
-  gap: 14px;
   align-items: center;
+  gap: 12px;
   margin-top: 10px;
 }
 
 .focus-control button {
   height: 56px;
   font-size: 26px;
-  border-radius: 22px;
-  background: linear-gradient(135deg,#ff6aa2,#c77dff);
+  border-radius: 20px;
+  background: linear-gradient(135deg, #ff6aa2, #ff99c8);
   color: #000;
-  font-weight: 900;
-  box-shadow: 0 0 22px rgba(255,105,180,0.55);
+  font-weight: 800;
+  box-shadow: 0 0 22px rgba(255,105,180,0.5);
 }
 
 #focusValue {
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 800;
-  color: #ff9fcf;
+  color: #ff99c8;
   text-align: center;
-  text-shadow: 0 0 10px rgba(255,105,180,0.45);
 }
 
 /* =========================
-   ADD BUTTON — NEON GREEN
+   ADD BUTTON
    ========================= */
 button[type="submit"] {
-  background: linear-gradient(135deg,#00f2a0,#00d08a);
-  color: #000;
-  font-weight: 900;
+  margin-top: 16px;
   padding: 14px;
-  border-radius: 16px;
-  box-shadow: 0 0 26px rgba(0,242,160,0.55);
+  font-size: 16px;
+  font-weight: 800;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #00e7a0, #00c97b);
+  color: #000;
+  box-shadow: 0 0 26px rgba(0,231,160,0.45);
 }
 
 /* =========================
-   PERSON CARD — GLASS
+   PERSON CARD
    ========================= */
 .person {
-  border-radius: 20px;
+  border-radius: 18px;
   padding: 16px;
-  position: relative;
 }
 
 .person .sub {
-  color: #9aa3ad;
-  margin-top: 6px;
+  font-size: 13px;
+  color: rgba(255,255,255,0.5);
 }
 
 /* focus bar */
 .focus-bar {
   height: 8px;
+  margin-top: 8px;
   background: rgba(255,255,255,0.08);
   border-radius: 6px;
   overflow: hidden;
-  margin-top: 8px;
 }
 
 .focus-fill {
   height: 100%;
-  background: linear-gradient(90deg,#00f2a0,#00d08a);
-  box-shadow: 0 0 16px rgba(0,242,160,0.6);
+  background: linear-gradient(90deg, #00e7a0, #00c97b);
 }
 
 /* next move */
 .advice {
   margin-top: 10px;
   font-size: 13px;
-  color: #b8bcc8;
+  color: rgba(255,255,255,0.7);
   font-style: italic;
 }
 
 /* =========================
-   ACTION BUTTONS
+   GLOW STATES
+   ========================= */
+.person.glow {
+  box-shadow:
+    0 0 35px rgba(0,231,160,0.18),
+    0 20px 45px rgba(0,0,0,0.7);
+}
+
+.person.paused {
+  box-shadow:
+    0 0 30px rgba(255,70,70,0.18),
+    0 18px 40px rgba(0,0,0,0.7);
+}
+
+/* =========================
+   CARD ACTIONS
    ========================= */
 .card-actions {
   display: flex;
@@ -238,35 +248,10 @@ button[type="submit"] {
 }
 
 .card-actions button {
-  flex: 1;
   background: rgba(255,255,255,0.06);
-  border-radius: 16px;
+  border-radius: 14px;
   padding: 12px;
-}
-
-/* =========================
-   STATES
-   ========================= */
-.person.glow {
-  box-shadow:
-    0 0 40px rgba(0,242,160,0.35),
-    0 20px 50px rgba(0,0,0,0.7);
-}
-
-.person.paused {
-  box-shadow:
-    inset 0 0 0 1px rgba(255,80,80,0.18),
-    0 0 22px rgba(255,80,80,0.25);
-}
-
-.person.paused::after {
-  content: "PAUSED";
-  position: absolute;
-  top: 12px;
-  right: 14px;
-  font-size: 11px;
-  color: #ff8b8b;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 /* =========================
@@ -275,7 +260,7 @@ button[type="submit"] {
 .edit-modal {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.75);
+  background: rgba(0,0,0,0.7);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -289,24 +274,25 @@ button[type="submit"] {
 .edit-box {
   width: 92%;
   max-width: 360px;
-  border-radius: 20px;
+  background: rgba(14,14,18,0.95);
+  border-radius: 18px;
   padding: 16px;
-  background:
-    linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.015)),
-    rgba(15,15,20,0.7);
+  box-shadow: 0 30px 60px rgba(0,0,0,0.8);
 }
 
 .edit-actions {
   display: flex;
   gap: 10px;
-  margin-top: 14px;
+  margin-top: 12px;
 }
 
 .edit-actions button {
   flex: 1;
   padding: 12px;
-  border-radius: 14px;
-  font-weight: 900;
+  border-radius: 12px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #00e7a0, #00c97b);
+  color: #000;
 }
 
 .edit-actions .cancel {
@@ -314,29 +300,12 @@ button[type="submit"] {
   color: #fff;
 }
 
-.edit-actions button:not(.cancel) {
-  background: linear-gradient(135deg,#00f2a0,#00d08a);
-  color: #000;
-}
-
 /* =========================
-   RESPONSIVE
+   REDUCED MOTION
    ========================= */
-@media (max-width: 420px) {
-  .focus-control button {
-    height: 52px;
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
   }
 }
-/* =========================
-   iOS WHITE GLOW FIX
-   ========================= */
-
-/* remove iOS autofill white */
-input:-webkit-autofill,
-textarea:-webkit-autofill,
-select:-webkit-autofill {
-  -webkit-box-shadow: 0 0 0px 1000px rgba(10,10,14,0.85) inset !important;
-  -webkit-text-fill-color: #fff !important;
-  transition: background-color 9999s ease-in-out 0s;
-}
-
