@@ -50,6 +50,10 @@ body {
   justify-self: center;
 }
 
+.focus-control button {
+  justify-self: center;
+}
+
 .add-btn {
   width: 100%;
   background: #00e676;
