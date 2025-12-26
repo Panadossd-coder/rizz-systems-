@@ -98,3 +98,28 @@ body {
   border-radius: 16px;
   width: 90%;
 }
+.card-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.card-actions button {
+  flex: 1;
+  padding: 10px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.08);
+  color: white;
+  border: none;
+}
+
+.next-move {
+  margin-top: 8px;
+  font-size: 14px;
+  opacity: 0.85;
+}
+
+.sub {
+  font-size: 13px;
+  opacity: 0.6;
+}
