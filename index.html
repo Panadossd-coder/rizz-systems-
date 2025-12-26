@@ -12,7 +12,6 @@
     <h1>Rizz Web</h1>
     <div class="sub">Version 2 — Smart Focus</div>
 
-    <!-- DASHBOARD -->
     <div id="dashboard" class="card dashboard">
       <h3>💘 Today’s Dashboard</h3>
       <div class="dash-item">🎯 Focus: <span id="dashFocus">—</span></div>
@@ -22,7 +21,6 @@
 
     <div class="card status">✅ Version 2 running</div>
 
-    <!-- FORM -->
     <form id="addForm" class="card">
       <input name="name" placeholder="Name" required />
 
@@ -53,31 +51,22 @@
     <div id="peopleList"></div>
   </div>
 
-  <!-- audio file for button clicks (upload click.mp3 to repo root) -->
-  <audio id="clickSound" src="click.mp3" preload="auto" aria-hidden="true"></audio>
-<!-- EDIT FOCUS MODAL -->
-<div id="editModal" class="edit-modal hidden">
-  <div class="edit-box">
-    <h3>Edit Focus</h3>
-    <div id="editName"></div>
+  <audio id="clickSound" src="click.mp3" preload="auto"></audio>
 
-    <input type="range" id="editFocus" min="0" max="100" />
-
-    <div id="editFocusValue">0%</div>
-
-    <div class="edit-actions">
-      <button onclick="closeEdit()">Cancel</button>
-      <button onclick="saveEdit()">Save</button>
+  <!-- EDIT MODAL -->
+  <div id="editModal" class="edit-modal hidden">
+    <div class="edit-box">
+      <h3>Edit Focus</h3>
+      <div id="editName"></div>
+      <input type="range" id="editFocus" min="0" max="100" />
+      <div id="editFocusValue">0%</div>
+      <div class="edit-actions">
+        <button onclick="closeEdit()">Cancel</button>
+        <button onclick="saveEdit()">Save</button>
+      </div>
     </div>
   </div>
-</div>
+
   <script src="script.js"></script>
-<script>
-/* ONE-TIME GITHUB CACHE REFRESH */
-if (!sessionStorage.getItem("rizz_refreshed")) {
-  sessionStorage.setItem("rizz_refreshed", "true");
-  location.reload(true);
-}
-</script>
 </body>
 </html>
