@@ -174,3 +174,92 @@ button:active {
   transform: scale(0.94);
   opacity: 0.92;
 }
+/* =========================
+   STATUS CARD — ALIVE SYSTEM
+   ========================= */
+
+.status {
+  position: relative;
+  overflow: hidden;
+
+  background: linear-gradient(
+    180deg,
+    rgba(15,17,18,0.95),
+    rgba(12,14,15,0.98)
+  );
+
+  border-radius: 18px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+
+  box-shadow:
+    0 14px 28px rgba(0,0,0,0.55),
+    0 0 22px rgba(0,208,138,0.18);
+
+  animation: statusBreath 5.5s ease-in-out infinite;
+}
+
+/* soft inner life glow */
+.status::before {
+  content: "";
+  position: absolute;
+  inset: -40%;
+  background: radial-gradient(
+    circle,
+    rgba(0,208,138,0.25),
+    transparent 60%
+  );
+  opacity: 0.5;
+  filter: blur(30px);
+  z-index: 0;
+  animation: statusPulse 4.8s ease-in-out infinite;
+}
+
+/* subtle sweep shimmer */
+.status::after {
+  content: "";
+  position: absolute;
+  top: -60%;
+  left: -60%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    120deg,
+    transparent 45%,
+    rgba(255,255,255,0.06),
+    transparent 55%
+  );
+  transform: rotate(-12deg);
+  animation: statusSweep 6.5s linear infinite;
+  z-index: 1;
+}
+
+/* keep text above effects */
+.status {
+  color: #00f2a0;
+}
+
+.status > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* animations */
+@keyframes statusBreath {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.015); }
+  100% { transform: scale(1); }
+}
+
+@keyframes statusPulse {
+  0%   { opacity: 0.45; }
+  50%  { opacity: 0.7; }
+  100% { opacity: 0.45; }
+}
+
+@keyframes statusSweep {
+  0%   { transform: translateX(-100%) rotate(-12deg); opacity: 0; }
+  30%  { opacity: 0.35; }
+  60%  { transform: translateX(100%) rotate(-12deg); opacity: 0; }
+  100% { opacity: 0; }
+}
