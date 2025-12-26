@@ -234,3 +234,72 @@ button:active {
     0 10px 26px rgba(0,0,0,.45),
     0 0 20px rgba(255,105,180,.25);
 }
+/* =========================
+   A1 — HAPTIC-LIKE FEEL (CSS ONLY)
+   Safe for iOS Safari + Vercel
+   ========================= */
+
+/* ---------- Instant tap snap ---------- */
+button {
+  transition:
+    transform 0.06s linear,
+    box-shadow 0.06s linear,
+    filter 0.06s linear;
+}
+
+button:active {
+  transform: scale(0.94);
+  filter: brightness(1.05);
+}
+
+/* ---------- Focus +/- tactile kick ---------- */
+.focus-control button:active {
+  transform: scale(0.92) translateY(1px);
+  box-shadow: inset 0 4px 10px rgba(0,0,0,.45);
+}
+
+/* ---------- Save / Add confirmation snap ---------- */
+button[type="submit"]:active,
+.edit-actions button:not(.cancel):active {
+  transform: scale(0.93);
+  box-shadow:
+    0 6px 18px rgba(0,0,0,.5),
+    inset 0 2px 6px rgba(255,255,255,.25);
+}
+
+/* ---------- Card micro haptic reaction ---------- */
+.person:active {
+  animation: hapticCard 0.14s linear;
+}
+
+@keyframes hapticCard {
+  0%   { transform: translateX(0); }
+  25%  { transform: translateX(-1px); }
+  50%  { transform: translateX(1px); }
+  75%  { transform: translateX(-1px); }
+  100% { transform: translateX(0); }
+}
+
+/* ---------- Dashboard pulse on interaction ---------- */
+.dashboard:active {
+  animation: dashPulse 0.18s ease-out;
+}
+
+@keyframes dashPulse {
+  from {
+    transform: scale(0.995);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+/* ---------- Accessibility ---------- */
+@media (prefers-reduced-motion: reduce) {
+  button,
+  .person,
+  .dashboard {
+    animation: none !important;
+    transition: none !important;
+  }
+}
