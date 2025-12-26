@@ -196,42 +196,34 @@ button {
   -webkit-tap-highlight-color: transparent;
 }
 /* =========================
-   MICRO-POLISH — FAST & SMOOTH BUTTON FEEL
-   (SAFE, NO SHAPE CHANGE)
+   BUTTONS — FAST & SMOOTH (iOS SNAP)
    ========================= */
-
 button,
 .status-buttons button,
 .focus-control button,
-.card-actions button {
+#peopleList button {
+  -webkit-tap-highlight-color: transparent;
+  will-change: transform, box-shadow, opacity;
+
+  /* 🔥 faster transitions */
   transition:
-    transform 0.08s cubic-bezier(.25,.9,.25,1),
+    transform 0.08s cubic-bezier(.2,.8,.2,1),
     box-shadow 0.12s ease,
-    filter 0.12s ease;
-  will-change: transform;
+    opacity 0.08s ease;
 }
 
-/* finger down — instant response */
+/* hover (desktop only, harmless on mobile) */
+button:hover,
+.status-buttons button:hover,
+.focus-control button:hover {
+  transform: translateY(-2px) scale(1.015);
+}
+
+/* ✅ MAIN FIX: instant tactile press */
 button:active,
 .status-buttons button:active,
-.focus-control button:active,
-.card-actions button:active {
-  transform: scale(0.965);
-  filter: brightness(0.96);
-}
-
-/* finger release — soft rebound */
-button:not(:active),
-.status-buttons button:not(:active),
-.focus-control button:not(:active),
-.card-actions button:not(:active) {
-  transform: scale(1);
-}
-
-/* active status button — slightly lifted */
-.status-buttons button.active {
-  transform: scale(1.03);
-  box-shadow:
-    0 10px 24px rgba(0,0,0,0.35),
-    0 0 18px rgba(255,105,180,0.18);
+.focus-control button:active {
+  transform: scale(0.94);
+  opacity: 0.9;
+  transition-duration: 0.04s; /* ⚡ very fast */
 }
