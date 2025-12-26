@@ -128,14 +128,20 @@ const editFocus=document.getElementById("editFocus");
 const editFocusValue=document.getElementById("editFocusValue");
 
 function openEditModal(i){
-  editingIndex=i;
-  const p=people[i];
-  editNameInput.value=p.name;
-  editStatusSelect.value=p.status;
-  editFocus.value=p.focus;
-  editFocusValue.textContent=p.focus+"%";
+  editingIndex = i;
+  const p = people[i];
+  if (!p) return;
+
+  editNameInput.value = p.name;
+  editStatusSelect.value = p.status;
+  editFocus.value = p.focus;
+  editFocusValue.textContent = p.focus + "%";
+
   editModal.classList.remove("hidden");
+  editModal.style.pointerEvents = "auto"; // 🔥 symmetry fix
+
   document.body.style.overflow = "hidden";
+  document.body.style.touchAction = "none";
 }
 editFocus.oninput=()=>editFocusValue.textContent=editFocus.value+"%";
 
