@@ -80,22 +80,7 @@
   </div>
 
   <script src="script.js"></script>
- <script>
-/* 🔄 Vercel + iOS Safari cache refresh (one-time) */
-(function () {
-  const KEY = "rizz_v2_cache_refresh_done";
-  if (!sessionStorage.getItem(KEY)) {
-    sessionStorage.setItem(KEY, "1");
-    const links = document.querySelectorAll('link[rel="stylesheet"]');
-    links.forEach(link => {
-      const href = link.getAttribute("href");
-      if (href) {
-        link.setAttribute("href", href.split("?")[0] + "?v=" + Date.now());
-      }
-    });
-  }
-})();
-</script>
+
 
 </body>
 </html>
