@@ -134,11 +134,6 @@ function editPerson(i){
   const newStatus = prompt("Edit status (crush, dating, pause):", p.status);
   if (newStatus === null) return;
 
-  const newFocus = prompt("Edit focus (0–100):", p.focus);
-  if (newFocus === null) return;
-
-  // sanitize
-  const focusNum = Math.max(0, Math.min(100, parseInt(newFocus, 10) || 0));
 
   p.name = newName.trim() || p.name;
   p.status = ["crush","dating","pause"].includes(newStatus)
