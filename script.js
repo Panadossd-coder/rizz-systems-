@@ -109,7 +109,7 @@ function render(){
       <p>${p.notes || ""}</p>
 
       <div class="card-actions">
-        <button onclick="editStatus(${i})">Edit Status</button>
+      <button onclick="editPerson(${i})">Edit</button>
         <button onclick="removePerson(${i})">Remove</button>
       </div>
     `;
