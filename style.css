@@ -23,210 +23,85 @@ h1 { font-size: 28px; margin-bottom: 4px; }
   margin-bottom: 14px;
 }
 
-/* ----------------------
-   STABLE DASHBOARD STYLE
-   Single, safe, performant
-   ---------------------- */
+/* DASHBOARD */
 .dashboard {
-  position: relative;
   text-align: center;
-  border-radius: 18px;
-  padding: 20px 18px;
-
   background: radial-gradient(circle at top, rgba(255,105,180,0.18), #0f1112 70%);
-  box-shadow: 0 18px 36px rgba(0,0,0,0.65), 0 0 28px rgba(255,105,180,0.22);
+  box-shadow: 0 18px 36px rgba(0,0,0,0.65);
   animation: dashboardPulse 6s ease-in-out infinite;
-  will-change: transform;
 }
-
-/* static soft glow layer (safe) */
-.dashboard::before {
-  content: "";
-  position: absolute;
-  inset: -6px;
-  border-radius: 22px;
-  background: radial-gradient(circle, rgba(255,105,180,0.28), transparent 70%);
-  filter: blur(24px);
-  opacity: 0.55;
-  z-index: -1;
-}
-
-/* text clarity */
-.dash-item { margin-top: 6px; }
-.dashboard h3 { margin-bottom: 14px; font-size: 18px; font-weight: 700; color: #fff; }
-.dashboard .dash-item { margin-top: 8px; font-size: 15px; color: #f5f5f5; }
-.dashboard .dash-item span { font-weight: 700; color: #ff9fcf; }
 
 @keyframes dashboardPulse {
-  0%   { transform: scale(1); }
-  50%  { transform: scale(1.025); }
+  0% { transform: scale(1); }
+  50% { transform: scale(1.025); }
   100% { transform: scale(1); }
 }
 
-/* ----------------------
-   FORM, STATUS, FOCUS UI
-   ---------------------- */
-.status { color: #00d08a; font-size: 14px; }
+.dash-item { margin-top: 8px; }
+.dash-item span { color: #ff9fcf; font-weight: 700; }
 
+/* FORM */
 input, textarea, button {
   width: 100%;
   margin-top: 10px;
   padding: 12px;
   border-radius: 10px;
   border: none;
-  font-size: 14px;
 }
 
 button {
   background: #00d08a;
   color: #000;
-  font-weight: 600;
+  font-weight: 700;
 }
-
-.label { margin-top: 14px; font-size: 13px; color: #9aa3ad; }
 
 /* STATUS BUTTONS */
 .status-buttons {
   display: flex;
   gap: 10px;
-  margin-top: 8px;
 }
 
 .status-buttons button {
-  flex: 1;
   background: #1c1f22;
   color: #fff;
-  border-radius: 12px;
 }
 
 .status-buttons button.active {
   background: linear-gradient(135deg, #ff6aa2, #ff99c8);
   color: #000;
-  font-weight: 700;
 }
 
-/* FOCUS CONTROL */
+/* FOCUS */
 .focus-control {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  margin-top: 10px;
+  align-items: center;
 }
 
-.focus-control button {
-  width: 64px;
-  height: 48px;
-  font-size: 24px;
-  background: linear-gradient(135deg, #ff6aa2, #ff99c8);
-  color: #000;
-  border-radius: 14px;
-}
-
-#focusValue { font-size: 20px; font-weight: 700; color: #ff99c8; }
+#focusValue { font-size: 20px; color: #ff99c8; }
 
 /* CARDS */
-.focus-bar { height: 8px; background: #1c1f22; border-radius: 6px; overflow: hidden; }
-.focus-fill { height: 100%; background: #00d08a; }
-
-.reminder {
-  margin-top: 8px;
-  padding: 8px;
-  border-left: 3px solid #ffb020;
-  background: rgba(255,176,32,0.08);
-  font-size: 13px;
+.focus-bar {
+  height: 8px;
+  background: #1c1f22;
+  border-radius: 6px;
 }
 
-.advice {
-  margin-top: 8px;
-  font-size: 13px;
-  color: #9aa3ad;
-  font-style: italic;
+.focus-fill {
+  height: 100%;
+  background: #00d08a;
 }
 
-/* DIM LOW FOCUS CARDS */
-.person.dim { opacity: 0.45; filter: grayscale(40%); }
-
-/* =========================
-   BUTTONS — SMOOTH & TACTILE
-   ========================= */
-button,
-input[type="submit"],
-.status-buttons button,
-.focus-control button,
-#peopleList button {
-  -webkit-tap-highlight-color: transparent;
-  transition: transform .12s cubic-bezier(.2,.9,.2,1), box-shadow .18s cubic-bezier(.2,.9,.2,1), background .18s ease, opacity .12s ease;
-  will-change: transform, box-shadow, opacity;
-  cursor: pointer;
-  outline: none;
+.person.dim {
+  opacity: 0.45;
+  filter: grayscale(40%);
 }
 
-/* hover / pointer */
-button:hover,
-.status-buttons button:hover,
-.focus-control button:hover {
-  transform: translateY(-3px) scale(1.01);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.45), 0 2px 10px rgba(255,105,180,0.08);
+.person.glow {
+  box-shadow: 0 0 32px rgba(255,105,180,0.18);
 }
 
-/* pressed */
-button:active,
-.status-buttons button:active,
-.focus-control button:active {
-  transform: translateY(0) scale(.985);
-  transition-duration: .08s;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.45);
-  opacity: 0.98;
-}
-
-/* keyboard focus */
-button:focus-visible,
-.status-buttons button:focus-visible,
-.focus-control button:focus-visible {
-  box-shadow: 0 0 0 4px rgba(255,105,180,0.12), 0 8px 20px rgba(0,0,0,0.45);
-  border-radius: 12px;
-}
-
-/* stronger primary look */
-button { border-radius: 12px; font-weight: 700; letter-spacing: .2px; }
-
-.status-buttons button { transition: transform .12s cubic-bezier(.2,.9,.2,1), box-shadow .18s ease, background .14s ease; border-radius: 14px; padding: 10px 12px; }
-
-.status-buttons button.active { transform: translateY(-4px) scale(1.02); box-shadow: 0 12px 28px rgba(255,105,180,0.14), 0 2px 8px rgba(0,0,0,0.45); }
-
-.focus-control button { width: 64px; height: 48px; border-radius: 12px; font-size: 22px; transition-duration: .10s; }
-.focus-control button:hover { transform: translateY(-2px) scale(1.02); }
-.focus-control button:active { transform: scale(.98); }
-
-/* small "Remove" / card buttons */
-#peopleList button {
-  background: rgba(255,255,255,0.04);
-  color: #fff;
-  font-weight: 600;
-  padding: 8px 10px;
-  border-radius: 10px;
-  margin-top: 10px;
-}
-
-/* accessibility */
-@media (prefers-reduced-motion: reduce) {
-  button, .status-buttons button, .focus-control button, .dashboard {
-    transition: none !important;
-    transform: none !important;
-    animation: none !important;
-  }
-  .dashboard { transform: none; }
-}
-
-/* responsive tweaks */
-@media (max-width:420px){
-  .dashboard { padding: 16px 12px; }
-  .dashboard h3 { font-size: 16px; }
-  .dashboard .dash-item { font-size: 14px; }
-}
-/* =========================
-   CARD ACTION BUTTONS
-   ========================= */
+/* CARD ACTIONS */
 .card-actions {
   display: flex;
   gap: 10px;
@@ -234,118 +109,39 @@ button { border-radius: 12px; font-weight: 700; letter-spacing: .2px; }
 }
 
 .card-actions button {
-  flex: 1;
+  background: rgba(255,255,255,0.05);
+  color: #fff;
 }
-/* =========================
-   EDIT MODAL (inputs + slider) + CARD GLOW
-   Append at bottom of style.css
-   ========================= */
 
+/* EDIT MODAL */
 .edit-modal {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.6);
+  background: rgba(0,0,0,0.7);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 9999;
 }
 
-.edit-modal.hidden {
-  display: none;
-}
+.edit-modal.hidden { display: none; }
 
 .edit-box {
-  width: 92%;
-  max-width: 360px;
-  background: linear-gradient(180deg, rgba(18,18,18,0.98), rgba(14,13,16,0.98));
+  background: #0f1112;
   border-radius: 16px;
-  padding: 18px;
-  box-shadow: 0 18px 40px rgba(0,0,0,0.6), 0 0 40px rgba(255,105,180,0.06) inset;
+  padding: 20px;
+  width: 90%;
+  max-width: 320px;
   text-align: center;
-  border: 1px solid rgba(255,255,255,0.03);
-}
-
-.edit-box h3 {
-  margin: 0 0 8px 0;
-  font-size: 18px;
-  color: #fff;
-}
-
-.edit-box input[type="text"],
-.edit-box select {
-  width: 100%;
-  padding: 10px 12px;
-  margin-top: 10px;
-  border-radius: 10px;
-  border: none;
-  background: rgba(255,255,255,0.04);
-  color: #fff;
-  font-size: 15px;
-  outline: none;
-}
-
-.slider-wrap {
-  margin-top: 12px;
-  margin-bottom: 8px;
-}
-
-#editFocus {
-  width: 100%;
-  -webkit-appearance: none;
-  height: 10px;
-  border-radius: 8px;
-  background: linear-gradient(90deg, rgba(0,208,138,0.9) 0%, rgba(0,208,138,0.3) 60%, rgba(60,60,60,0.3) 60%);
-  outline: none;
-}
-
-#editFocus::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
-  border: 4px solid rgba(255,255,255,0.12);
 }
 
 #editFocusValue {
-  margin-top: 10px;
-  font-weight: 700;
   color: #ff99c8;
+  font-weight: 700;
+  margin: 10px 0;
 }
 
-/* buttons inside modal */
 .edit-actions {
   display: flex;
-  gap: 12px;
-  margin-top: 14px;
-}
-
-.edit-actions button {
-  flex: 1;
-  padding: 12px;
-  border-radius: 12px;
-  border: none;
-  font-weight: 700;
-  background: #00d08a;
-  color: #000;
-}
-
-/* cancel style */
-.edit-actions button:first-child {
-  background: rgba(255,255,255,0.06);
-  color: #fff;
-}
-
-/* glow card for high focus */
-.person.glow {
-  transform: translateY(-4px);
-  box-shadow: 0 18px 48px rgba(0,0,0,0.55), 0 0 36px rgba(255,105,180,0.12);
-  border: 1px solid rgba(255,105,180,0.06);
-}
-
-/* keep prefers-reduced-motion rules */
-@media (prefers-reduced-motion: reduce) {
-  .person.glow { transform: none; transition: none; }
+  gap: 10px;
 }
