@@ -1,9 +1,9 @@
 /* ===============================
    RIZZ WEB — VERSION 2.1
-   CLEAN, STABLE, EDIT-SAFE JS
+   CLEAN • FIXED • STABLE
    =============================== */
 
-/* ---------- STORAGE ---------- */
+/* ---------- STATE ---------- */
 let people = JSON.parse(localStorage.getItem("rizz_people")) || [];
 let focus = 0;
 let editingIndex = null;
@@ -22,12 +22,13 @@ const statusInput = form.querySelector('[name="status"]');
 
 /* ---------- STATUS BUTTONS ---------- */
 document.querySelectorAll(".status-buttons button").forEach(btn => {
-  btn.onclick = () => {
-    document.querySelectorAll(".status-buttons button")
+  btn.addEventListener("click", () => {
+    document
+      .querySelectorAll(".status-buttons button")
       .forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
     statusInput.value = btn.dataset.status;
-  };
+  });
 });
 
 /* ---------- FOCUS CONTROLS ---------- */
@@ -51,64 +52,59 @@ function updateFocusUI() {
    =============================== */
 
 const MOVES = {
-  datingHigh: [
-    "Plan a quality date this week",
-    "Talk about future goals together",
-    "Deep conversation about direction",
-    "Create a shared routine",
-    "Discuss exclusivity",
-    "Surprise her thoughtfully",
-    "Spend uninterrupted quality time",
-    "Strengthen emotional bond",
-    "Make long-term plans",
-    "Open up emotionally"
-  ],
-  datingMid: [
-    "Check in emotionally",
-    "Plan something light",
-    "Stay consistent",
-    "Flirty but calm conversation",
-    "Support her plans",
-    "Casual call",
-    "Show appreciation",
-    "Be present, not intense"
-  ],
-  datingLow: [
-    "Give space today",
-    "Respond but don’t push",
-    "Keep it light",
-    "Avoid heavy talks",
-    "Focus on yourself",
-    "Minimal interaction"
-  ],
-  crushHigh: [
-    "Compliment her vibe",
-    "Flirt confidently",
-    "Suggest a casual meet",
-    "Create intrigue",
-    "Build attraction",
-    "Escalate playfully"
-  ],
-  crushMid: [
-    "Send a fun message",
-    "Light teasing",
-    "Stay interesting",
-    "React to her energy",
-    "Avoid over-texting"
-  ],
-  crushLow: [
-    "Pull back slightly",
-    "Let her miss you",
-    "Observe quietly",
-    "Protect your energy",
-    "Do nothing today"
-  ],
+  dating: {
+    high: [
+      "Plan a quality date this week",
+      "Talk about future goals together",
+      "Deep conversation about direction",
+      "Create a shared routine",
+      "Discuss exclusivity",
+      "Make long-term plans",
+      "Spend intentional quality time"
+    ],
+    mid: [
+      "Check in emotionally",
+      "Light call or voice note",
+      "Support her plans",
+      "Flirty but calm conversation",
+      "Be consistent, not intense"
+    ],
+    low: [
+      "Give space today",
+      "Minimal check-in",
+      "No pressure interaction",
+      "Focus on yourself",
+      "Do nothing today"
+    ]
+  },
+  crush: {
+    high: [
+      "Flirt confidently",
+      "Compliment her vibe",
+      "Suggest a casual meet",
+      "Increase emotional presence",
+      "Move things forward"
+    ],
+    mid: [
+      "Send a fun message",
+      "Light teasing",
+      "Stay mysterious",
+      "React to her energy"
+    ],
+    low: [
+      "Pull back slightly",
+      "Observe silently",
+      "No chasing",
+      "Respond only",
+      "Stay quiet today"
+    ]
+  },
   pause: [
     "Do nothing today",
     "No contact",
-    "Reset emotionally",
+    "Reset emotional energy",
     "Focus on yourself",
-    "Let time pass"
+    "Wait and observe"
   ]
 };
 
@@ -122,15 +118,15 @@ function getNextMove(p) {
   }
 
   if (p.status === "dating") {
-    if (p.focus >= 80) return pick(MOVES.datingHigh);
-    if (p.focus >= 50) return pick(MOVES.datingMid);
-    return pick(MOVES.datingLow);
+    if (p.focus >= 80) return pick(MOVES.dating.high);
+    if (p.focus >= 50) return pick(MOVES.dating.mid);
+    return pick(MOVES.dating.low);
   }
 
   if (p.status === "crush") {
-    if (p.focus >= 60) return pick(MOVES.crushHigh);
-    if (p.focus >= 30) return pick(MOVES.crushMid);
-    return pick(MOVES.crushLow);
+    if (p.focus >= 60) return pick(MOVES.crush.high);
+    if (p.focus >= 30) return pick(MOVES.crush.mid);
+    return pick(MOVES.crush.low);
   }
 
   return "No action today";
@@ -149,9 +145,10 @@ function updateDashboard() {
 
   const paused = people.filter(p => p.focus <= 20);
   const focused = people
-    .filter(p =>
-      (p.status === "dating" && p.focus >= 80) ||
-      (p.status === "crush" && p.focus >= 60)
+    .filter(
+      p =>
+        (p.status === "dating" && p.focus >= 80) ||
+        (p.status === "crush" && p.focus >= 60)
     )
     .sort((a, b) => b.focus - a.focus)
     .slice(0, 2);
@@ -165,7 +162,7 @@ function updateDashboard() {
     : "—";
 
   dashAction.textContent = focused.length
-    ? focused[0].nextMove + " — " + focused[0].name
+    ? `${focused[0].nextMove} — ${focused[0].name}`
     : "Stay steady.";
 }
 
@@ -182,13 +179,13 @@ function render() {
 
     card.innerHTML = `
       <strong>${p.name}</strong>
-      <span class="sub">${p.status}</span>
+      <div class="sub">${p.status}</div>
       <div class="focus-bar">
         <div class="focus-fill" style="width:${p.focus}%"></div>
       </div>
       <div class="sub">${p.focus}% focus</div>
-      ${p.reminder ? `<div class="reminder">⏰ ${p.reminder}</div>` : ""}
-      <div class="next-move"><strong>Next Move:</strong> ${p.nextMove}</div>
+      ${p.reminder ? `<div>⏰ ${p.reminder}</div>` : ""}
+      <div><strong>Next Move:</strong> ${p.nextMove}</div>
       <div class="card-actions">
         <button onclick="openEdit(${i})">Edit</button>
         <button onclick="removePerson(${i})">Remove</button>
@@ -227,9 +224,9 @@ form.onsubmit = e => {
 };
 
 /* ===============================
-   EDIT MODAL (FIXED IDS)
+   EDIT (FIXED IDS)
    =============================== */
-window.openEdit = function (i) {
+function openEdit(i) {
   editingIndex = i;
   const p = people[i];
 
@@ -239,14 +236,14 @@ window.openEdit = function (i) {
   document.getElementById("editFocusValue").textContent = p.focus + "%";
 
   document.getElementById("editModal").classList.remove("hidden");
-  document.body.style.overflow = "hidden";
-};
+}
 
 document.getElementById("editFocus").oninput = e => {
-  document.getElementById("editFocusValue").textContent = e.target.value + "%";
+  document.getElementById("editFocusValue").textContent =
+    e.target.value + "%";
 };
 
-window.saveEdit = function () {
+function saveEdit() {
   const p = people[editingIndex];
 
   p.name = document.getElementById("editName").value.trim();
@@ -257,22 +254,21 @@ window.saveEdit = function () {
   save();
   render();
   closeEdit();
-};
+}
 
-window.closeEdit = function () {
+function closeEdit() {
   document.getElementById("editModal").classList.add("hidden");
-  document.body.style.overflow = "";
   editingIndex = null;
-};
+}
 
 /* ===============================
    REMOVE
    =============================== */
-window.removePerson = function (i) {
+function removePerson(i) {
   people.splice(i, 1);
   save();
   render();
-};
+}
 
 /* ===============================
    SAVE
