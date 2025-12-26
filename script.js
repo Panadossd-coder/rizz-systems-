@@ -31,7 +31,8 @@ let focus = 0;
 let people = JSON.parse(localStorage.getItem("rizz_people")) || [];
 
 /* =========================
-   EDIT MODAL LOGIC (FINAL)
+   EDIT MODAL LOGIC — NAME, STATUS, FOCUS
+   Replace previous edit-person blocks with this
    ========================= */
 let editingIndex = null;
 
@@ -39,38 +40,62 @@ function editPerson(i){
   editingIndex = i;
   const p = people[i];
 
-  document.getElementById("editName").textContent = p.name;
-
+  // populate fields inside modal
+  const nameInput = document.getElementById("editNameInput");
+  const statusSelect = document.getElementById("editStatusSelect");
   const slider = document.getElementById("editFocus");
   const value = document.getElementById("editFocusValue");
 
-  slider.value = p.focus;
-  value.textContent = p.focus + "%";
+  nameInput.value = p.name || "";
+  statusSelect.value = p.status || "crush";
+
+  slider.value = p.focus || 0;
+  value.textContent = (p.focus || 0) + "%";
 
   slider.oninput = () => {
     value.textContent = slider.value + "%";
   };
 
+  // show modal
   document.getElementById("editModal").classList.remove("hidden");
+  document.getElementById("editModal").setAttribute("aria-hidden", "false");
+
+  // focus the name input for quick editing on mobile
+  setTimeout(()=> nameInput.focus(), 120);
 }
 
 function closeEdit(){
   document.getElementById("editModal").classList.add("hidden");
+  document.getElementById("editModal").setAttribute("aria-hidden", "true");
   editingIndex = null;
 }
 
 function saveEdit(){
   if (editingIndex === null) return;
 
-  people[editingIndex].focus = parseInt(
-    document.getElementById("editFocus").value,
-    10
-  );
+  const nameInput = document.getElementById("editNameInput");
+  const statusSelect = document.getElementById("editStatusSelect");
+  const slider = document.getElementById("editFocus");
 
+  const newName = nameInput.value.trim();
+  const newStatus = statusSelect.value;
+  const newFocus = Math.max(0, Math.min(100, parseInt(slider.value, 10) || 0));
+
+  // update person
+  people[editingIndex].name = newName || people[editingIndex].name;
+  if (["crush","dating","pause"].includes(newStatus)) {
+    people[editingIndex].status = newStatus;
+  }
+  people[editingIndex].focus = newFocus;
+
+  // save + refresh display
   save();
   render();
+
   closeEdit();
 }
+let focus = 0;
+let people = JSON.parse(localStorage.getItem("rizz_people")) || [];
 
 /* ---------------- STATUS BUTTONS ---------------- */
 document.querySelectorAll(".status-buttons button").forEach(btn => {
@@ -133,7 +158,10 @@ function render(){
 
   people.forEach((p,i)=>{
     const card = document.createElement("div");
-    card.className = `card person ${p.focus <= 20 ? "dim" : ""}`;
+    let extraClass = "";
+if (p.focus <= 20) extraClass = "dim";
+else if (p.focus >= 70) extraClass = "glow";
+card.className = `card person ${extraClass}`;
 
     card.innerHTML = `
       <strong>${p.name}</strong><br>
