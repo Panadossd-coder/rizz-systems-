@@ -133,7 +133,34 @@ function editPerson(i){
 
   const newStatus = prompt("Edit status (crush, dating, pause):", p.status);
   if (newStatus === null) return;
+  let focusNum = p.focus;
 
+  const slider = document.createElement("input");
+  slider.type = "range";
+  slider.min = 0;
+  slider.max = 100;
+  slider.value = p.focus;
+  slider.style.width = "100%";
+
+  const wrapper = document.createElement("div");
+  wrapper.style.padding = "10px 0";
+
+  const label = document.createElement("div");
+  label.textContent = `Focus: ${slider.value}%`;
+  label.style.marginBottom = "6px";
+  label.style.fontWeight = "700";
+
+  slider.oninput = () => {
+    label.textContent = `Focus: ${slider.value}%`;
+  };
+
+  wrapper.appendChild(label);
+  wrapper.appendChild(slider);
+
+  const ok = confirm("Adjust focus using the slider, then press OK.");
+  if (!ok) return;
+
+  focusNum = parseInt(slider.value, 10);
 
   p.name = newName.trim() || p.name;
   p.status = ["crush","dating","pause"].includes(newStatus)
