@@ -145,6 +145,7 @@ function updateDashboard(){
 /* =========================
    RENDER
    ========================= */
+console.log("PEOPLE STATE:", JSON.stringify(people, null, 2));
 function render(){
   list.innerHTML = "";
 
