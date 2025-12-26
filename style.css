@@ -123,3 +123,12 @@ body {
   font-size: 13px;
   opacity: 0.6;
 }
+.status-buttons button {
+  min-width: 90px;
+  height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: 999px;
+}
