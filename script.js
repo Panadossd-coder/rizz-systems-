@@ -1,15 +1,21 @@
-/* CLICK SOUND */
+/* =========================
+   BUTTON CLICK SOUND
+   ========================= */
 const clickSound = document.getElementById("clickSound");
 
-document.addEventListener("click", e => {
+document.addEventListener("click", (e) => {
   const btn = e.target.closest("button");
   if (!btn || !clickSound) return;
-  clickSound.currentTime = 0;
-  clickSound.volume = 0.35;
-  clickSound.play().catch(()=>{});
+  try {
+    clickSound.currentTime = 0;
+    clickSound.volume = 0.35;
+    clickSound.play().catch(() => {});
+  } catch (err) { /* ignore play errors */ }
 });
 
-/* CORE */
+/* =========================
+   CORE APP LOGIC
+   ========================= */
 const form = document.getElementById("addForm");
 const list = document.getElementById("peopleList");
 
@@ -18,24 +24,75 @@ const dashPause = document.getElementById("dashPause");
 const dashAction = document.getElementById("dashAction");
 
 const focusValueEl = document.getElementById("focusValue");
-const statusInput = form.querySelector('[name="status"]');
-const focusInput = form.querySelector('[name="focus"]');
+const statusInput = form.querySelector('input[name="status"]');
+const focusInput = form.querySelector('input[name="focus"]');
 
 let focus = 0;
 let people = JSON.parse(localStorage.getItem("rizz_people")) || [];
 
-/* STATUS BUTTONS */
-document.querySelectorAll(".status-buttons button").forEach(btn => {
-  btn.onclick = () => {
+/* =========================
+   EDIT MODAL LOGIC (NAME/STATUS/FOCUS)
+   ========================= */
+let editingIndex = null;
+const editModal = document.getElementById("editModal");
+const editNameInput = document.getElementById("editNameInput");
+const editStatusSelect = document.getElementById("editStatusSelect");
+const editFocus = document.getElementById("editFocus");
+const editFocusValue = document.getElementById("editFocusValue");
+
+function editPerson(i){
+  editingIndex = i;
+  const p = people[i];
+
+  editNameInput.value = p.name || "";
+  editStatusSelect.value = p.status || "crush";
+  editFocus.value = p.focus || 0;
+  editFocusValue.textContent = (p.focus || 0) + "%";
+
+  editModal.classList.remove("hidden");
+  editModal.setAttribute("aria-hidden", "false");
+  setTimeout(()=> editNameInput.focus(), 80);
+}
+
+function closeEdit(){
+  editModal.classList.add("hidden");
+  editModal.setAttribute("aria-hidden", "true");
+  editingIndex = null;
+}
+
+function saveEdit(){
+  if (editingIndex === null) return;
+
+  const newName = editNameInput.value.trim();
+  const newStatus = editStatusSelect.value;
+  const newFocus = Math.max(0, Math.min(100, parseInt(editFocus.value, 10) || 0));
+
+  if (newName) people[editingIndex].name = newName;
+  if (["crush","dating","pause"].includes(newStatus)) people[editingIndex].status = newStatus;
+  people[editingIndex].focus = newFocus;
+
+  save();
+  render();
+  closeEdit();
+}
+
+editFocus.oninput = () => {
+  editFocusValue.textContent = editFocus.value + "%";
+};
+
+/* ---------------- STATUS BUTTONS ---------------- */
+document.querySelectorAll(".status-buttons button").forEach(btn=>{
+  btn.addEventListener("click", () => {
     document.querySelectorAll(".status-buttons button")
       .forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
     statusInput.value = btn.dataset.status;
-  };
+  });
 });
-document.querySelector('[data-status="crush"]').classList.add("active");
+const defaultStatusBtn = document.querySelector('.status-buttons button[data-status="crush"]');
+if (defaultStatusBtn) defaultStatusBtn.classList.add("active");
 
-/* FOCUS */
+/* ---------------- FOCUS CONTROLS ---------------- */
 document.getElementById("plus").onclick = () => {
   focus = Math.min(100, focus + 10);
   updateFocus();
@@ -50,95 +107,105 @@ function updateFocus(){
   focusInput.value = focus;
 }
 
-/* EDIT MODAL */
-let editingIndex = null;
-const editModal = document.getElementById("editModal");
-const editNameInput = document.getElementById("editNameInput");
-const editStatusSelect = document.getElementById("editStatusSelect");
-const editFocus = document.getElementById("editFocus");
-const editFocusValue = document.getElementById("editFocusValue");
-
-function editPerson(i){
-  editingIndex = i;
-  const p = people[i];
-  editNameInput.value = p.name;
-  editStatusSelect.value = p.status;
-  editFocus.value = p.focus;
-  editFocusValue.textContent = p.focus + "%";
-  editModal.classList.remove("hidden");
+/* ---------------- ADVICE ---------------- */
+function adviceFor(f){
+  if(f >= 80) return "High priority. Reach out or plan a meet.";
+  if(f >= 60) return "Good momentum. Stay consistent.";
+  if(f >= 30) return "Keep it steady. No pressure.";
+  return "Low priority. Do not over-invest.";
 }
 
-editFocus.oninput = () => {
-  editFocusValue.textContent = editFocus.value + "%";
-};
-
-function closeEdit(){
-  editModal.classList.add("hidden");
-}
-
-function saveEdit(){
-  const p = people[editingIndex];
-  p.name = editNameInput.value.trim() || p.name;
-  p.status = editStatusSelect.value;
-  p.focus = parseInt(editFocus.value, 10);
-  save();
-  render();
-  closeEdit();
-}
-
-/* RENDER */
-function render(){
-  list.innerHTML = "";
-  people.forEach((p,i)=>{
-    const card = document.createElement("div");
-    card.className = "card";
-    card.innerHTML = `
-      <strong>${p.name}</strong><br>
-      <span class="sub">${p.status}</span>
-      <div class="focus-bar">
-        <div class="focus-fill" style="width:${p.focus}%"></div>
-      </div>
-      <div class="sub">${p.focus}% focus</div>
-      <div class="card-actions">
-        <button onclick="editPerson(${i})">Edit</button>
-        <button onclick="removePerson(${i})">Remove</button>
-      </div>
-    `;
-    list.appendChild(card);
-  });
-  updateDashboard();
-}
-
-/* DASHBOARD */
+/* ---------------- DASHBOARD ---------------- */
 function updateDashboard(){
-  if (!people.length) {
+  if(!people.length){
     dashFocus.textContent = "—";
     dashPause.textContent = "—";
     dashAction.textContent = "Add someone to begin.";
     return;
   }
-  dashFocus.textContent = people[0].name;
-  dashAction.textContent = "Stay consistent.";
+  const sorted = [...people].sort((a,b)=>b.focus-a.focus);
+  const focusP = sorted[0];
+  const pauseP = people.find(p=>p.status==="pause");
+
+  dashFocus.textContent = focusP ? focusP.name : "—";
+  dashPause.textContent = pauseP ? pauseP.name : "—";
+  dashAction.textContent = adviceFor(focusP.focus);
 }
 
-/* SAVE / REMOVE / ADD */
-function save(){
-  localStorage.setItem("rizz_people", JSON.stringify(people));
+/* ---------------- RENDER ---------------- */
+function render(){
+  list.innerHTML = "";
+
+  people.forEach((p,i)=>{
+    const card = document.createElement("div");
+    let extra = "";
+    if (p.focus <= 20) extra = "dim";
+    else if (p.focus >= 70) extra = "glow";
+    card.className = `card person ${extra}`;
+
+    card.innerHTML = `
+      <strong>${p.name}</strong><br>
+      <span class="sub">${p.status}</span>
+
+      <div class="focus-bar">
+        <div class="focus-fill" style="width:${p.focus}%"></div>
+      </div>
+      <div class="sub">${p.focus}% focus</div>
+
+      ${p.reminder?`<div class="reminder">⏰ ${p.reminder}</div>`:""}
+      <div class="advice">${adviceFor(p.focus)}</div>
+
+      <p>${p.notes || ""}</p>
+
+      <div class="card-actions">
+        <button onclick="editPerson(${i})">Edit</button>
+        <button onclick="removePerson(${i})">Remove</button>
+      </div>
+    `;
+
+    list.appendChild(card);
+  });
+
+  updateDashboard();
 }
+
+/* ---------------- REMOVE ---------------- */
 function removePerson(i){
   people.splice(i,1);
   save();
   render();
 }
-form.onsubmit = e => {
+
+/* ---------------- SAVE ---------------- */
+function save(){
+  localStorage.setItem("rizz_people", JSON.stringify(people));
+}
+
+/* ---------------- ADD ---------------- */
+form.addEventListener("submit", e=>{
   e.preventDefault();
-  people.push({ name: form.name.value.trim(), status: statusInput.value, focus });
+  const name = form.name.value.trim();
+  if (!name) return;
+
+  people.push({
+    name,
+    status: statusInput.value,
+    focus,
+    notes: form.notes.value.trim(),
+    reminder: form.reminder.value.trim()
+  });
+
   save();
   render();
+
   form.reset();
   focus = 0;
   updateFocus();
-};
+  statusInput.value = "crush";
+  document.querySelectorAll(".status-buttons button")
+    .forEach(b=>b.classList.remove("active"));
+  if (defaultStatusBtn) defaultStatusBtn.classList.add("active");
+});
 
 /* INIT */
 updateFocus();
