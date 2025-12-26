@@ -237,12 +237,14 @@ button { border-radius: 12px; font-weight: 700; letter-spacing: .2px; }
   flex: 1;
 }
 /* =========================
-   EDIT MODAL (FOCUS SLIDER)
+   EDIT MODAL (inputs + slider) + CARD GLOW
+   Append at bottom of style.css
    ========================= */
+
 .edit-modal {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.7);
+  background: rgba(0,0,0,0.6);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -254,34 +256,96 @@ button { border-radius: 12px; font-weight: 700; letter-spacing: .2px; }
 }
 
 .edit-box {
-  background: #0f1112;
+  width: 92%;
+  max-width: 360px;
+  background: linear-gradient(180deg, rgba(18,18,18,0.98), rgba(14,13,16,0.98));
   border-radius: 16px;
-  padding: 20px;
-  width: 90%;
-  max-width: 320px;
+  padding: 18px;
+  box-shadow: 0 18px 40px rgba(0,0,0,0.6), 0 0 40px rgba(255,105,180,0.06) inset;
   text-align: center;
+  border: 1px solid rgba(255,255,255,0.03);
 }
 
 .edit-box h3 {
-  margin-bottom: 10px;
+  margin: 0 0 8px 0;
+  font-size: 18px;
+  color: #fff;
+}
+
+.edit-box input[type="text"],
+.edit-box select {
+  width: 100%;
+  padding: 10px 12px;
+  margin-top: 10px;
+  border-radius: 10px;
+  border: none;
+  background: rgba(255,255,255,0.04);
+  color: #fff;
+  font-size: 15px;
+  outline: none;
+}
+
+.slider-wrap {
+  margin-top: 12px;
+  margin-bottom: 8px;
 }
 
 #editFocus {
   width: 100%;
-  margin: 16px 0;
+  -webkit-appearance: none;
+  height: 10px;
+  border-radius: 8px;
+  background: linear-gradient(90deg, rgba(0,208,138,0.9) 0%, rgba(0,208,138,0.3) 60%, rgba(60,60,60,0.3) 60%);
+  outline: none;
+}
+
+#editFocus::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  border: 4px solid rgba(255,255,255,0.12);
 }
 
 #editFocusValue {
+  margin-top: 10px;
   font-weight: 700;
   color: #ff99c8;
-  margin-bottom: 16px;
 }
 
+/* buttons inside modal */
 .edit-actions {
   display: flex;
-  gap: 10px;
+  gap: 12px;
+  margin-top: 14px;
 }
 
 .edit-actions button {
   flex: 1;
+  padding: 12px;
+  border-radius: 12px;
+  border: none;
+  font-weight: 700;
+  background: #00d08a;
+  color: #000;
+}
+
+/* cancel style */
+.edit-actions button:first-child {
+  background: rgba(255,255,255,0.06);
+  color: #fff;
+}
+
+/* glow card for high focus */
+.person.glow {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 48px rgba(0,0,0,0.55), 0 0 36px rgba(255,105,180,0.12);
+  border: 1px solid rgba(255,105,180,0.06);
+}
+
+/* keep prefers-reduced-motion rules */
+@media (prefers-reduced-motion: reduce) {
+  .person.glow { transform: none; transition: none; }
 }
