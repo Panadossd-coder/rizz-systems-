@@ -139,7 +139,15 @@ function openEditModal(i){
 }
 editFocus.oninput=()=>editFocusValue.textContent=editFocus.value+"%";
 
-function closeEdit(){ editModal.classList.add("hidden"); }
+function closeEdit(){
+  editModal.classList.add("hidden");
+  editModal.setAttribute("aria-hidden","true");
+
+  // ✅ STEP 3 FIX — restore scrolling (CRITICAL)
+  document.body.style.overflow = "";
+
+  editingIndex = null;
+}
 
 function saveEdit(){
   const p=people[editingIndex];
