@@ -353,3 +353,167 @@ button[type="submit"] {
       0 0 22px rgba(0,231,160,0.18);
   }
 }
+/* =========================
+   DASHBOARD — MIRROR GLASS + ROMANTIC LIFE
+   ========================= */
+
+.dashboard {
+  position: relative;
+  border-radius: 22px;
+  padding: 22px;
+  overflow: hidden;
+
+  /* Deep dark glass base */
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,0.06),
+      rgba(255,255,255,0.015)
+    ),
+    radial-gradient(
+      circle at top left,
+      rgba(0,255,180,0.18),
+      transparent 60%
+    ),
+    radial-gradient(
+      circle at bottom right,
+      rgba(255,105,180,0.18),
+      transparent 65%
+    ),
+    #0b0d10;
+
+  backdrop-filter: blur(22px) saturate(140%);
+  -webkit-backdrop-filter: blur(22px) saturate(140%);
+
+  box-shadow:
+    0 25px 60px rgba(0,0,0,0.75),
+    inset 0 1px 0 rgba(255,255,255,0.08);
+
+  animation: dashboardFloat 7s ease-in-out infinite;
+}
+
+/* floating life */
+@keyframes dashboardFloat {
+  0%   { transform: translateY(0); }
+  50%  { transform: translateY(-6px); }
+  100% { transform: translateY(0); }
+}
+
+/* =========================
+   MIRROR SHINE LAYER
+   ========================= */
+.dashboard::before {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  border-radius: inherit;
+
+  background:
+    linear-gradient(
+      120deg,
+      rgba(255,255,255,0.12),
+      rgba(255,255,255,0.02),
+      rgba(255,255,255,0.10)
+    );
+
+  opacity: 0.35;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
+/* =========================
+   ROMANTIC LIGHT SWEEP
+   ========================= */
+.dashboard::after {
+  content: "";
+  position: absolute;
+  top: -60%;
+  left: -60%;
+  width: 220%;
+  height: 220%;
+
+  background:
+    radial-gradient(
+      circle at 30% 30%,
+      rgba(255,255,255,0.18),
+      transparent 55%
+    ),
+    linear-gradient(
+      120deg,
+      transparent 40%,
+      rgba(255,255,255,0.08),
+      transparent 60%
+    );
+
+  animation: mirrorSweep 10s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes mirrorSweep {
+  0%   { transform: translateX(-25%) rotate(0deg); }
+  100% { transform: translateX(25%) rotate(0deg); }
+}
+
+/* =========================
+   GREEN + PINK NEON BREATH
+   ========================= */
+.dashboard {
+  animation:
+    dashboardFloat 7s ease-in-out infinite,
+    neonBreath 5.5s ease-in-out infinite;
+}
+
+@keyframes neonBreath {
+  0% {
+    box-shadow:
+      0 25px 60px rgba(0,0,0,0.75),
+      0 0 28px rgba(0,255,180,0.18),
+      0 0 22px rgba(255,105,180,0.14);
+  }
+  50% {
+    box-shadow:
+      0 30px 70px rgba(0,0,0,0.8),
+      0 0 46px rgba(0,255,180,0.32),
+      0 0 34px rgba(255,105,180,0.26);
+  }
+  100% {
+    box-shadow:
+      0 25px 60px rgba(0,0,0,0.75),
+      0 0 28px rgba(0,255,180,0.18),
+      0 0 22px rgba(255,105,180,0.14);
+  }
+}
+
+/* =========================
+   DASHBOARD TEXT POLISH
+   ========================= */
+.dashboard h3 {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  margin-bottom: 14px;
+  color: #ffffff;
+}
+
+.dash-item {
+  font-size: 14px;
+  margin-top: 8px;
+  color: rgba(255,255,255,0.75);
+}
+
+.dash-item span {
+  font-weight: 700;
+  color: #ffffff; /* pure white names */
+}
+
+/* =========================
+   REMOVE WHITE HAZE ISSUE
+   ========================= */
+.dashboard,
+.dashboard * {
+  background-clip: padding-box;
+}
+
+body {
+  background: radial-gradient(circle at top, #0a0b0e, #000);
+}
