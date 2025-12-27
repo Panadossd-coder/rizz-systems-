@@ -3,14 +3,19 @@
 <head>
   <meta charset="utf-8" />
   <title>Rizz Web — Version 2 (Upgrade)</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-<!-- FORCE DARK SAFARI UI -->
-<meta name="theme-color" content="#000000" />
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<meta name="apple-mobile-web-app-capable" content="yes" />
-  <!-- ✅ LOAD CSS -->
+
+  <!-- viewport -->
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- 🔒 FORCE DARK SAFARI ROOT -->
+  <meta name="theme-color" content="#000000">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+
+  <!-- CSS -->
   <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
   <div class="app">
     <h1>Rizz Web</h1>
@@ -49,7 +54,7 @@
       <input type="hidden" name="focus" value="0" />
 
       <textarea name="notes" placeholder="Notes"></textarea>
-      <input name="reminder" placeholder="Reminder (optional text; used to mark a reminder)" />
+      <input name="reminder" placeholder="Reminder (optional text)" />
 
       <button type="submit">Add</button>
     </form>
@@ -57,34 +62,10 @@
     <div id="peopleList"></div>
   </div>
 
-  <!-- click sound (optional) -->
-  <audio id="clickSound" src="click.mp3" preload="auto" aria-hidden="true"></audio>
+  <!-- click sound -->
+  <audio id="clickSound" src="click.mp3" preload="auto"></audio>
 
-  <!-- EDIT MODAL -->
-  <div id="editModal" class="edit-modal hidden" aria-hidden="true" role="dialog" aria-modal="true">
-    <div class="edit-box">
-      <h3>Edit</h3>
-
-      <input id="editNameInput" type="text" placeholder="Name" />
-
-      <select id="editStatusSelect" aria-label="Status">
-        <option value="crush">💘 Crush</option>
-        <option value="dating">💞 Dating</option>
-        <option value="pause">⏸ Pause</option>
-      </select>
-
-      <input type="range" id="editFocus" min="0" max="100" />
-      <div id="editFocusValue" style="text-align:center;margin-top:8px;color:#ff99c8;font-weight:700;">0%</div>
-
-      <div class="edit-actions">
-        <button type="button" class="cancel" onclick="closeEdit()">Cancel</button>
-        <button type="button" onclick="saveEdit()">Save</button>
-      </div>
-    </div>
-  </div>
-
+  <!-- JS -->
   <script src="script.js"></script>
-
-
 </body>
 </html>
