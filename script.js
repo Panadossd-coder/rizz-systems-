@@ -212,9 +212,15 @@ function render() {
 
   people.forEach((p, i) => {
     const card = document.createElement("div");
-    card.className = `card person ${ (parseInt(p.focus,10) <= 20) ? "paused" : (glowSet.has(p.name) ? "glow" : "") }`;
+    card.className = `card person ${
+      (parseInt(p.focus,10) <= 20)
+        ? "paused"
+        : (glowSet.has(p.name) ? "glow" : "")
+    }`;
 
-    const reminderHtml = p.reminder ? `<div class="reminder">⏰ ${escapeHtml(p.reminder)}</div>` : "";
+    const reminderHtml = p.reminder
+      ? `<div class="reminder">⏰ ${escapeHtml(p.reminder)}</div>`
+      : "";
 
     card.innerHTML = `
       <strong>${escapeHtml(p.name)}</strong>
