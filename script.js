@@ -1,7 +1,7 @@
 /* =========================
    Rizz Web — Version 2
    Stable Core + Next Move
-   Version 2.2.1 — Smart Notes: checkbox default ON + generated keywords
+   Version 2.2.2 — Smart Notes: large generated note set + fuzzy helpers
    ========================= */
 
 /* ---------- OPTIONAL CLICK SOUND ---------- */
@@ -152,163 +152,195 @@ function getNextMove(p) {
 }
 
 /* =========================
-   DASHBOARD
-   ========================= */
-function updateDashboard() {
-  if (!people.length) {
-    dashFocus.textContent = "—";
-    dashPause.textContent = "—";
-    dashAction.textContent = "Add someone to begin.";
-    return;
-  }
-
-  const paused = people.filter(p => parseInt(p.focus, 10) <= 20);
-
-  const candidates = people
-    .filter(p =>
-      (p.status === "dating" && p.focus >= 80) ||
-      (p.status === "crush" && p.focus >= 60)
-    )
-    .sort((a, b) => b.focus - a.focus)
-    .slice(0, 2);
-
-  dashFocus.textContent = candidates.length
-    ? candidates.map(p => p.name).join(", ")
-    : "—";
-
-  dashPause.textContent = paused.length
-    ? paused.map(p => p.name).join(", ")
-    : "—";
-
-  dashAction.textContent = candidates.length
-    ? `${candidates[0].nextMove} — ${candidates[0].name}`
-    : "Stay steady.";
-}
-
-/* =========================
-   SMART NOTES (V2.2.1)
-   - checkbox default ON (user can uncheck)
-   - generated large keyword set from base verbs + modifiers
+   SMART NOTES (V2.2.2)
+   - Generate a very large set of short-event phrases at runtime
+   - Simple fuzzy matching: synonyms, modifiers, stemming, substring fallback
+   - Checkbox default ON (apply) — user can uncheck
    ========================= */
 
-/* compact base actions with base weights */
+/* ---------- Compact base actions (kept readable) ---------- */
+/* These are the seeds. The build function expands with modifiers and synonyms. */
 const SMART_BASE_ACTIONS = {
   met: 15,
+  saw: 12,
+  "met up": 15,
   called: 8,
+  "missed call": -2,
+  "voice call": 10,
+  "video call": 12,
   texted: 6,
   messaged: 6,
-  messaged_back: 5,
-  "video-called": 10,
-  vc: 10,
+  replied: 5,
+  "replied late": -2,
+  "replied quick": 4,
+  "no reply": -8,
+  "left on read": -10,
+  ignored: -12,
+  ghosted: -14,
+  flirted: 10,
+  teased: 6,
+  sexted: 14,
+  "sent nudes": 18,
+  "sent money": -5,
+  gifted: 12,
+  "brought food": 10,
+  "shared food": 8,
   hugged: 10,
   kissed: 20,
   dated: 18,
-  cooked: 12,
-  "sent money": -5,
-  gifted: 12,
-  apologized: 10,
-  "deep talk": 14,
-  "shared food": 8,
-  laughed: 4,
-  flirted: 10,
-  sexted: 14,
-  "sent nudes": 18,
-  "gave gift": 10,
-  "photo sent": 5,
-  "voice note": 6,
-  "long reply": 4,
-  "short reply": -3,
-  "no reply": -8,
-  ignored: -12,
-  ghosted: -14,
-  argued: -15,
   "made plans": 12,
   "cancelled plans": -8,
-  "she initiated": 12,
-  "i initiated": 8,
+  "postponed plans": -4,
+  "came late": -3,
+  "came early": 3,
   "met parents": 25,
   "family met": 20,
-  "birthday": 12,
+  "introduced friends": 14,
+  "birthday together": 12,
   "anniversary": 14,
-  "cheated": -40,
+  apologized: 10,
   "apology accepted": 8,
+  argued: -15,
+  "deep talk": 14,
+  "serious talk": 12,
+  "future talk": 14,
+  "study together": 6,
+  "attended party": 6,
+  "went out": 8,
+  "came through": 8,
+  "picked up": 6,
+  "drove together": 8,
   "helped": 10,
   "supported": 10,
-  "jealous": -6,
-  "complimented": 6,
-  "ignored message": -10,
+  "sent gift": 12,
+  "sent airtime": 6,
+  "sent data": 6,
+  "gave advice": 8,
+  "cried together": 10,
+  "made up": 8,
   "got closer": 12,
-  "distance": -8
+  "distance": -8,
+  jealous: -6,
+  complimented: 6,
+  "photo sent": 5,
+  "selfie sent": 5,
+  "voice note": 6,
+  "long voice": 8,
+  "short voice": 3,
+  "long reply": 4,
+  "short reply": -3,
+  "no show": -10,
+  cheated: -40,
+  "broke up": -30,
+  "make up": 10,
+  "paid bill": 8,
+  "helped family": 12,
+  "introduced to family": 20,
+  "travel together": 18,
+  "holiday together": 18,
+  "sent flowers": 12,
+  "declined": -6,
+  "accepted invite": 6,
+  "ignored message": -10
 };
 
-/* modifiers to create many phrase variants */
+/* ---------- Modifiers to create many phrase variants ---------- */
 const SMART_MODIFIERS = [
-  "", "today", "yesterday", "this morning", "last night", "tonight",
-  "again", "briefly", "nicely", "quickly", "deeply", "heavily",
+  "", "today", "yesterday", "this morning", "this afternoon", "this evening", "last night",
+  "tonight", "again", "briefly", "nicely", "quickly", "deeply", "heavily",
   "softly", "awkwardly", "unexpectedly", "by text", "by call", "in person",
   "at lunch", "at dinner", "after class", "before class", "on campus",
   "online", "during weekend", "this week", "last week", "this month", "last month",
-  "twice", "thrice", "multiple times", "once"
+  "twice", "thrice", "multiple times", "once", "2x", "3x"
 ];
 
-/* synonyms mapping (small set for tags and alternate words) */
+/* ---------- Synonyms mapping for broader matching ---------- */
 const SMART_SYNONYMS = {
-  texted: ["msg", "messaged", "sent message"],
+  met: ["saw", "met up", "met today", "saw her", "saw him"],
+  texted: ["msg", "messaged", "sent msg", "dm"],
   called: ["phoned"],
-  "no reply": ["no-response", "no response", "noreply"],
-  ignored: ["ignored message", "left on read", "left on seen"],
-  met: ["saw", "met up", "met today"],
-  flirted: ["playful", "teased"]
+  "no reply": ["noreply", "no-response", "no response"],
+  ignored: ["left on read", "left on seen"],
+  flirted: ["playful", "teased"],
+  "sent money": ["transferred money", "sent cash", "sent airtime", "sent data"],
+  gifted: ["gave gift", "brought gift", "gifted her"],
+  hugged: ["gave hug"],
+  kissed: ["gave kiss"],
+  "voice note": ["vn", "voice msg", "voice message"],
+  "video call": ["vc", "videochat"],
+  "long reply": ["detailed reply"],
+  "short reply": ["brief reply", "one word reply"],
+  "sent nudes": ["nudes sent", "sent nude"],
+  cheated: ["cheating", "caught cheating"]
 };
 
-/* the generated keyword map (phrase -> weight) */
-let SMART_NOTE_KEYWORDS = {};
-let SMART_NOTE_TAGS = {};
+/* ---------- Generated maps (populated at runtime) ---------- */
+let SMART_NOTE_KEYWORDS = {}; // phrase -> weight
+let SMART_NOTE_TAGS = {};     // #tag -> weight
 
-/* build many variants at runtime (keeps file compact while creating lots of entries) */
+/* ---------- Build a huge keyword map at runtime ---------- */
 function buildSmartKeywords() {
   SMART_NOTE_KEYWORDS = {};
   SMART_NOTE_TAGS = {};
 
-  // 1) expand base actions with modifiers
+  // Expand base actions with modifiers and synonyms
   Object.keys(SMART_BASE_ACTIONS).forEach(base => {
     const baseWeight = SMART_BASE_ACTIONS[base];
 
-    // add base phrase
+    // add base
     SMART_NOTE_KEYWORDS[base] = (SMART_NOTE_KEYWORDS[base] || 0) + baseWeight;
 
-    // add synonyms for base (if any)
+    // add synonyms
     if (SMART_SYNONYMS[base]) {
       SMART_SYNONYMS[base].forEach(syn => {
         SMART_NOTE_KEYWORDS[syn] = (SMART_NOTE_KEYWORDS[syn] || 0) + baseWeight;
       });
     }
 
-    // generate modifier combinations to multiply into many phrases
+    // generate modifier combos
     SMART_MODIFIERS.forEach(mod => {
-      if (!mod || mod === "") return; // base already added
-      const phrase = `${base} ${mod}`;
-      // modifier multiplier heuristics
+      const modTrim = (mod || "").trim();
+      if (!modTrim) return; // skip empty (base already added)
+      const phrase = `${base} ${modTrim}`;
+      // heuristics for modifier impact
       let factor = 1;
-      if (mod.includes("today") || mod.includes("this")) factor = 1.15;
-      if (mod.includes("yesterday") || mod.includes("last")) factor = 1.05;
-      if (mod.includes("quick") || mod.includes("brief")) factor = 0.8;
-      if (mod.includes("twice") || mod.includes("thrice") || mod.includes("multiple")) factor = 1.25;
-      const weight = Math.round(baseWeight * factor);
+      if (modTrim.includes("today") || modTrim.includes("this")) factor = 1.15;
+      if (modTrim.includes("yesterday") || modTrim.includes("last")) factor = 1.05;
+      if (modTrim.includes("quick") || modTrim.includes("brief")) factor = 0.8;
+      if (modTrim.includes("twice") || modTrim.includes("thrice") || modTrim.includes("multiple")) factor = 1.25;
+      if (modTrim.includes("by call") || modTrim.includes("by phone") || modTrim.includes("voice") || modTrim.includes("vc")) factor *= 1.05;
+      const weight = Math.max(1, Math.round(baseWeight * factor));
       SMART_NOTE_KEYWORDS[phrase] = (SMART_NOTE_KEYWORDS[phrase] || 0) + weight;
     });
 
-    // tags
-    SMART_NOTE_TAGS["#" + base.replace(/\s+/g, "")] = baseWeight;
+    // tags (compact)
+    const tag = "#" + base.replace(/\s+/g, "");
+    SMART_NOTE_TAGS[tag] = (SMART_NOTE_TAGS[tag] || 0) + baseWeight;
   });
 
-  // 2) also add some constructed tag forms for common multiword phrases
-  ["no reply", "left on read", "left on seen", "short reply", "long reply", "video call", "voice note", "sent money", "sent nudes"].forEach(p => {
-    if (!SMART_NOTE_KEYWORDS[p]) {
-      // fallback weight
-      SMART_NOTE_KEYWORDS[p] = SMART_BASE_ACTIONS[p] || -6;
-    }
-    SMART_NOTE_TAGS["#" + p.replace(/\s+/g, "")] = SMART_NOTE_KEYWORDS[p];
+  // add some manual extra short phrases common in messages
+  const extras = {
+    "left on seen": -10,
+    "late reply": -4,
+    "quick reply": 3,
+    "goodnight text": 4,
+    "good morning": 4,
+    "came by": 8,
+    "stopped by": 8,
+    "checked on me": 6,
+    "supported me": 10,
+    "helped me": 10,
+    "paid for me": 12
+  };
+  Object.keys(extras).forEach(k => {
+    SMART_NOTE_KEYWORDS[k] = (SMART_NOTE_KEYWORDS[k] || 0) + extras[k];
+    SMART_NOTE_TAGS["#" + k.replace(/\s+/g, "")] = (SMART_NOTE_TAGS["#" + k.replace(/\s+/g, "")] || 0) + extras[k];
+  });
+
+  // create tag variants for phrases already present
+  Object.keys(SMART_NOTE_KEYWORDS).forEach(p => {
+    const t = "#" + p.replace(/\s+/g, "");
+    if (!SMART_NOTE_TAGS[t]) SMART_NOTE_TAGS[t] = SMART_NOTE_KEYWORDS[p];
   });
 }
 
@@ -319,28 +351,40 @@ buildSmartKeywords();
 const SMART_MAX_DELTA = 30; // clamp per save
 const SMART_MIN_APPLY_THRESHOLD = 3; // require at least 3 delta to auto-apply
 
-/* helper: normalize text */
+/* ---------- Text helpers ---------- */
 function normalizeText(s) {
-  return String(s || "").toLowerCase().replace(/[.,;!]/g, " ");
+  return String(s || "").toLowerCase().replace(/[.,;!?\u2019]/g, " ");
 }
 
-/* compute matching delta from notes and person status.
-   uses the generated SMART_NOTE_KEYWORDS and SMART_NOTE_TAGS maps.
-*/
+/* simple stemmer: remove common suffixes to improve matching */
+function simpleStem(word) {
+  if (!word) return word;
+  // remove punctuation
+  let w = word.replace(/[^a-z0-9]/gi, "");
+  if (w.length <= 3) return w;
+  // common endings
+  const endings = ["ing", "ed", "ly", "es", "s", "er"];
+  for (let e of endings) {
+    if (w.endsWith(e) && w.length - e.length >= 3) {
+      return w.slice(0, -e.length);
+    }
+  }
+  return w;
+}
+
+/* ---------- Matching & scoring ---------- */
 function computeNoteDelta(notes, person) {
   if (!notes) return 0;
   const text = normalizeText(notes);
 
   let total = 0;
-
-  // 1) keyword/phrase exact matching (word boundaries)
+  // 1) exact/phrase matches with word boundaries
   Object.keys(SMART_NOTE_KEYWORDS).forEach(k => {
-    // escape regex special chars in key
+    // escape regex
     const safeKey = k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const re = new RegExp("\\b" + safeKey.replace(/\s+/g, "\\s+") + "\\b", "gi");
     const matches = text.match(re);
     if (matches && matches.length) {
-      // diminishing returns for repeats
       const count = matches.length;
       const base = SMART_NOTE_KEYWORDS[k] || 0;
       const multiplier = Math.max(0.35, 1 - 0.25 * (count - 1));
@@ -348,29 +392,47 @@ function computeNoteDelta(notes, person) {
     }
   });
 
-  // 2) tag support (#tag)
+  // 2) tag matches
   Object.keys(SMART_NOTE_TAGS).forEach(tag => {
-    const re = new RegExp(tag.replace(/[#]/g, "\\$&"), "gi"); // tag is like "#met"
+    const re = new RegExp(tag.replace(/[#]/g, "\\$&"), "gi");
     const matches = text.match(re);
     if (matches && matches.length) {
       total += SMART_NOTE_TAGS[tag] * matches.length;
     }
   });
 
-  // 3) small heuristic: if notes contain numbers like "2 days" or "3x", slightly adjust
-  const numMatch = text.match(/(\d+)\s*x|\b(\d+)\s+days?\b/gi);
+  // 3) token-level fuzzy matching (stem + substring fallback)
+  const tokens = text.split(/\s+/).filter(Boolean);
+  tokens.forEach(tok => {
+    const stem = simpleStem(tok);
+    // check if any SMART_NOTE_KEYWORDS key contains the stem as word or substring
+    Object.keys(SMART_NOTE_KEYWORDS).some(k => {
+      // fast path: exact token match within key
+      const safeKey = k.toLowerCase();
+      if (safeKey.split(/\s+/).includes(tok)) {
+        total += Math.round(SMART_NOTE_KEYWORDS[k] * 0.6); // partial match weight
+        return true;
+      }
+      // stem-based substring match
+      if (stem && safeKey.includes(stem) && stem.length >= 3) {
+        total += Math.round(SMART_NOTE_KEYWORDS[k] * 0.4);
+        return true;
+      }
+      return false;
+    });
+  });
+
+  // 4) numeric multipliers (e.g., "2x", "twice", "3 times")
+  const numMatch = text.match(/(\d+)\s*x|\b(\d+)\s+times?\b|\b(twice|thrice)\b/gi);
   if (numMatch && numMatch.length) {
-    total = Math.round(total * Math.min(1 + numMatch.length * 0.15, 1.5));
+    total = Math.round(total * Math.min(1 + numMatch.length * 0.2, 2));
   }
 
-  // 4) status-aware modifiers (dating = dampen positive boosts; pause dampens most)
-  if (person && person.status === "dating") {
-    total = Math.round(total * 0.6);
-  } else if (person && person.status === "pause") {
-    total = Math.round(total * 0.25);
-  }
+  // 5) status-aware modifier to avoid runaway boosts on dating/pause
+  if (person && person.status === "dating") total = Math.round(total * 0.6);
+  if (person && person.status === "pause") total = Math.round(total * 0.25);
 
-  // 5) clamp
+  // 6) clamp
   if (total > SMART_MAX_DELTA) total = SMART_MAX_DELTA;
   if (total < -SMART_MAX_DELTA) total = -SMART_MAX_DELTA;
 
@@ -379,7 +441,7 @@ function computeNoteDelta(notes, person) {
 
 function formatDeltaLabel(delta) {
   if (!delta || delta === 0) return "Suggested: —";
-  return (delta > 0 ? "Suggested: +" + delta : "Suggested: " + delta);
+  return delta > 0 ? `Suggested: +${delta}` : `Suggested: ${delta}`;
 }
 
 function applyDeltaToPerson(p, delta) {
@@ -511,7 +573,7 @@ function openEdit(i) {
     );
   };
 
-  // also update suggestion if status select changes while editing notes
+  // update suggestion if status select changes while editing notes
   editStatusSelect.onchange = () => {
     smartSuggestion.textContent = formatDeltaLabel(
       computeNoteDelta(editNotes.value, { status: editStatusSelect.value })
