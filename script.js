@@ -1,10 +1,13 @@
 /* =========================
-   Rizz Web — Version 2
-   Stable Core + Next Move
-   Version 2.2.2 — Smart Notes: large generated note set + fuzzy helpers
+   Rizz Web — Version 2.3
+   Smart Notes v3 (Event Engine)
+   - Event-based understanding (not huge static lists)
+   - Defaults: auto-apply ON, casual words neutral
+   - Safe DOM access and guaranteed closeEdit()
+   - Minimal, deterministic math: cap, dampers, diminishing returns
    ========================= */
 
-/* ---------- OPTIONAL CLICK SOUND ---------- */
+/* ---------- Optional click sound (unchanged behavior) ---------- */
 const clickSound = document.getElementById("clickSound");
 document.addEventListener("click", e => {
   const btn = e.target.closest("button");
@@ -25,7 +28,6 @@ const dashPause = document.getElementById("dashPause");
 const dashAction = document.getElementById("dashAction");
 
 const focusValueEl = document.getElementById("focusValue");
-const statusInput = form.querySelector('[name="status"]');
 const focusInput = form.querySelector('[name="focus"]');
 
 /* ---------- STATE ---------- */
@@ -34,9 +36,7 @@ let people = JSON.parse(localStorage.getItem("rizz_people")) || [];
 let editingIndex = null;
 let selectedStatus = "crush";
 
-/* =========================
-   STATUS BUTTONS
-   ========================= */
+/* ---------- UI: status buttons & focus controls ---------- */
 document.querySelectorAll(".status-buttons button").forEach(btn => {
   btn.onclick = () => {
     document
@@ -46,30 +46,24 @@ document.querySelectorAll(".status-buttons button").forEach(btn => {
     selectedStatus = btn.dataset.status;
   };
 });
-
 const defaultBtn = document.querySelector('[data-status="crush"]');
 if (defaultBtn) defaultBtn.classList.add("active");
 
-/* =========================
-   FOCUS CONTROLS
-   ========================= */
 document.getElementById("plus").onclick = () => {
   focus = Math.min(100, focus + 10);
   updateFocusUI();
 };
-
 document.getElementById("minus").onclick = () => {
   focus = Math.max(0, focus - 10);
   updateFocusUI();
 };
-
 function updateFocusUI() {
   focusValueEl.textContent = focus + "%";
-  focusInput.value = focus;
+  if (focusInput) focusInput.value = focus;
 }
 
 /* =========================
-   NEXT MOVE ENGINE
+   NEXT MOVE engine (unchanged)
    ========================= */
 const NEXT_MOVES = {
   dating: {
@@ -126,333 +120,323 @@ const NEXT_MOVES = {
     "Wait and observe"
   ]
 };
-
-function pickRandom(arr) {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
-
+function pickRandom(arr) { return arr[Math.floor(Math.random()*arr.length)]; }
 function getNextMove(p) {
-  if (p.status === "pause" || parseInt(p.focus, 10) <= 20) {
-    return pickRandom(NEXT_MOVES.pause);
-  }
-
+  if (!p) return "Stay steady.";
+  if (p.status === "pause" || parseInt(p.focus,10) <= 20) { return pickRandom(NEXT_MOVES.pause); }
   if (p.status === "dating") {
     if (p.focus >= 80) return pickRandom(NEXT_MOVES.dating.high);
     if (p.focus >= 40) return pickRandom(NEXT_MOVES.dating.mid);
     return pickRandom(NEXT_MOVES.dating.low);
   }
-
   if (p.status === "crush") {
     if (p.focus >= 60) return pickRandom(NEXT_MOVES.crush.high);
     if (p.focus >= 30) return pickRandom(NEXT_MOVES.crush.mid);
     return pickRandom(NEXT_MOVES.crush.low);
   }
-
   return "Stay steady.";
 }
 
 /* =========================
-   SMART NOTES (V2.2.2)
-   - Generate a very large set of short-event phrases at runtime
-   - Simple fuzzy matching: synonyms, modifiers, stemming, substring fallback
-   - Checkbox default ON (apply) — user can uncheck
+   Smart Notes v3 - Event Understanding
+   Principles:
+   - Action groups (seed verbs) with base weights
+   - Modifiers (time, medium, intensity) adjust weight multiplicatively
+   - Direction & polarity (she initiated / i initiated) add/sub
+   - Neutral casual words (cool, okay, fine) are ignored (0)
+   - Diminishing returns on repeated matches
+   - Status-aware dampers: dating/pause reduce positive deltas
+   - Caps applied (SMART_MAX_DELTA)
    ========================= */
 
-/* ---------- Compact base actions (kept readable) ---------- */
-/* These are the seeds. The build function expands with modifiers and synonyms. */
-const SMART_BASE_ACTIONS = {
-  met: 15,
-  saw: 12,
-  "met up": 15,
-  called: 8,
-  "missed call": -2,
-  "voice call": 10,
+/* ---------- Configuration ---------- */
+const SMART_MAX_DELTA = 30;   // clamp per-save
+const SMART_MIN_APPLY_THRESHOLD = 3; // require at least this absolute delta to auto-apply
+
+/* Neutral casual words (explicitly neutral) */
+const NEUTRAL_WORDS = new Set(["cool","ok","okay","fine","nice","k","thanks","thx","lol","haha"]);
+
+/* Seed action groups (human-readable seeds) */
+const ACTION_SEEDS = {
+  // communication
+  "call": 10,
+  "audio call": 10,
   "video call": 12,
-  texted: 6,
-  messaged: 6,
-  replied: 5,
-  "replied late": -2,
-  "replied quick": 4,
+  "voice note": 6,
+  "text": 6,
+  "message": 6,
+  "reply": 5,
+  "replied": 5,
+  "missed call": -2,
+  // meetings
+  "meet": 14,
+  "met": 15,
+  "saw": 12,
+  "hang out": 10,
+  "dinner": 8,
+  "lunch": 6,
+  // intimacy
+  "kiss": 20,
+  "kissed": 20,
+  "hug": 10,
+  "hugged": 10,
+  "sext": 14,
+  "nude": 18,
+  // effort / support
+  "help": 10,
+  "supported": 10,
+  "gift": 12,
+  "sent money": -5,
+  // conflict / neglect
+  "ignore": -12,
+  "ignored": -12,
   "no reply": -8,
   "left on read": -10,
-  ignored: -12,
-  ghosted: -14,
-  flirted: 10,
-  teased: 6,
-  sexted: 14,
-  "sent nudes": 18,
-  "sent money": -5,
-  gifted: 12,
-  "brought food": 10,
-  "shared food": 8,
-  hugged: 10,
-  kissed: 20,
-  dated: 18,
+  "argue": -15,
+  "cheat": -40,
+  // planning / milestones
   "made plans": 12,
   "cancelled plans": -8,
-  "postponed plans": -4,
-  "came late": -3,
-  "came early": 3,
   "met parents": 25,
-  "family met": 20,
-  "introduced friends": 14,
-  "birthday together": 12,
-  "anniversary": 14,
-  apologized: 10,
-  "apology accepted": 8,
-  argued: -15,
-  "deep talk": 14,
-  "serious talk": 12,
-  "future talk": 14,
-  "study together": 6,
-  "attended party": 6,
-  "went out": 8,
-  "came through": 8,
-  "picked up": 6,
-  "drove together": 8,
-  "helped": 10,
-  "supported": 10,
-  "sent gift": 12,
-  "sent airtime": 6,
-  "sent data": 6,
-  "gave advice": 8,
-  "cried together": 10,
-  "made up": 8,
-  "got closer": 12,
-  "distance": -8,
-  jealous: -6,
-  complimented: 6,
-  "photo sent": 5,
-  "selfie sent": 5,
-  "voice note": 6,
-  "long voice": 8,
-  "short voice": 3,
-  "long reply": 4,
-  "short reply": -3,
-  "no show": -10,
-  cheated: -40,
-  "broke up": -30,
-  "make up": 10,
-  "paid bill": 8,
-  "helped family": 12,
-  "introduced to family": 20,
-  "travel together": 18,
-  "holiday together": 18,
-  "sent flowers": 12,
-  "declined": -6,
-  "accepted invite": 6,
-  "ignored message": -10
+  "introduced": 14,
+  // misc
+  "apologize": 8,
+  "apology": 8,
+  "compliment": 6,
+  "jealous": -6
 };
 
-/* ---------- Modifiers to create many phrase variants ---------- */
-const SMART_MODIFIERS = [
-  "", "today", "yesterday", "this morning", "this afternoon", "this evening", "last night",
-  "tonight", "again", "briefly", "nicely", "quickly", "deeply", "heavily",
-  "softly", "awkwardly", "unexpectedly", "by text", "by call", "in person",
-  "at lunch", "at dinner", "after class", "before class", "on campus",
-  "online", "during weekend", "this week", "last week", "this month", "last month",
-  "twice", "thrice", "multiple times", "once", "2x", "3x"
-];
-
-/* ---------- Synonyms mapping for broader matching ---------- */
-const SMART_SYNONYMS = {
-  met: ["saw", "met up", "met today", "saw her", "saw him"],
-  texted: ["msg", "messaged", "sent msg", "dm"],
-  called: ["phoned"],
-  "no reply": ["noreply", "no-response", "no response"],
-  ignored: ["left on read", "left on seen"],
-  flirted: ["playful", "teased"],
-  "sent money": ["transferred money", "sent cash", "sent airtime", "sent data"],
-  gifted: ["gave gift", "brought gift", "gifted her"],
-  hugged: ["gave hug"],
-  kissed: ["gave kiss"],
-  "voice note": ["vn", "voice msg", "voice message"],
-  "video call": ["vc", "videochat"],
-  "long reply": ["detailed reply"],
-  "short reply": ["brief reply", "one word reply"],
-  "sent nudes": ["nudes sent", "sent nude"],
-  cheated: ["cheating", "caught cheating"]
-};
-
-/* ---------- Generated maps (populated at runtime) ---------- */
-let SMART_NOTE_KEYWORDS = {}; // phrase -> weight
-let SMART_NOTE_TAGS = {};     // #tag -> weight
-
-/* ---------- Build a huge keyword map at runtime ---------- */
-function buildSmartKeywords() {
-  SMART_NOTE_KEYWORDS = {};
-  SMART_NOTE_TAGS = {};
-
-  // Expand base actions with modifiers and synonyms
-  Object.keys(SMART_BASE_ACTIONS).forEach(base => {
-    const baseWeight = SMART_BASE_ACTIONS[base];
-
-    // add base
-    SMART_NOTE_KEYWORDS[base] = (SMART_NOTE_KEYWORDS[base] || 0) + baseWeight;
-
-    // add synonyms
-    if (SMART_SYNONYMS[base]) {
-      SMART_SYNONYMS[base].forEach(syn => {
-        SMART_NOTE_KEYWORDS[syn] = (SMART_NOTE_KEYWORDS[syn] || 0) + baseWeight;
-      });
-    }
-
-    // generate modifier combos
-    SMART_MODIFIERS.forEach(mod => {
-      const modTrim = (mod || "").trim();
-      if (!modTrim) return; // skip empty (base already added)
-      const phrase = `${base} ${modTrim}`;
-      // heuristics for modifier impact
-      let factor = 1;
-      if (modTrim.includes("today") || modTrim.includes("this")) factor = 1.15;
-      if (modTrim.includes("yesterday") || modTrim.includes("last")) factor = 1.05;
-      if (modTrim.includes("quick") || modTrim.includes("brief")) factor = 0.8;
-      if (modTrim.includes("twice") || modTrim.includes("thrice") || modTrim.includes("multiple")) factor = 1.25;
-      if (modTrim.includes("by call") || modTrim.includes("by phone") || modTrim.includes("voice") || modTrim.includes("vc")) factor *= 1.05;
-      const weight = Math.max(1, Math.round(baseWeight * factor));
-      SMART_NOTE_KEYWORDS[phrase] = (SMART_NOTE_KEYWORDS[phrase] || 0) + weight;
-    });
-
-    // tags (compact)
-    const tag = "#" + base.replace(/\s+/g, "");
-    SMART_NOTE_TAGS[tag] = (SMART_NOTE_TAGS[tag] || 0) + baseWeight;
-  });
-
-  // add some manual extra short phrases common in messages
-  const extras = {
-    "left on seen": -10,
-    "late reply": -4,
-    "quick reply": 3,
-    "goodnight text": 4,
-    "good morning": 4,
-    "came by": 8,
-    "stopped by": 8,
-    "checked on me": 6,
-    "supported me": 10,
-    "helped me": 10,
-    "paid for me": 12
-  };
-  Object.keys(extras).forEach(k => {
-    SMART_NOTE_KEYWORDS[k] = (SMART_NOTE_KEYWORDS[k] || 0) + extras[k];
-    SMART_NOTE_TAGS["#" + k.replace(/\s+/g, "")] = (SMART_NOTE_TAGS["#" + k.replace(/\s+/g, "")] || 0) + extras[k];
-  });
-
-  // create tag variants for phrases already present
-  Object.keys(SMART_NOTE_KEYWORDS).forEach(p => {
-    const t = "#" + p.replace(/\s+/g, "");
-    if (!SMART_NOTE_TAGS[t]) SMART_NOTE_TAGS[t] = SMART_NOTE_KEYWORDS[p];
-  });
-}
-
-/* initialize generated keyword map */
-buildSmartKeywords();
-
-/* caps & behavior */
-const SMART_MAX_DELTA = 30; // clamp per save
-const SMART_MIN_APPLY_THRESHOLD = 3; // require at least 3 delta to auto-apply
-
-/* ---------- Text helpers ---------- */
-function normalizeText(s) {
-  return String(s || "").toLowerCase().replace(/[.,;!?\u2019]/g, " ");
-}
-
-/* simple stemmer: remove common suffixes to improve matching */
-function simpleStem(word) {
-  if (!word) return word;
-  // remove punctuation
-  let w = word.replace(/[^a-z0-9]/gi, "");
-  if (w.length <= 3) return w;
-  // common endings
-  const endings = ["ing", "ed", "ly", "es", "s", "er"];
-  for (let e of endings) {
-    if (w.endsWith(e) && w.length - e.length >= 3) {
-      return w.slice(0, -e.length);
-    }
+/* Modifier tokens that multiply base weights */
+const MODIFIERS = {
+  intensity: {
+    "long": 1.25,
+    "short": 0.8,
+    "deep": 1.3,
+    "quick": 0.85,
+    "twice": 1.25,
+    "thrice": 1.35,
+    "multiple": 1.4,
+    "again": 1.15
+  },
+  time: {
+    "today": 1.05,
+    "yesterday": 1.03,
+    "last night": 1.02,
+    "this week": 1.02,
+    "recently": 1.02
+  },
+  medium: {
+    "audio": 1.05,
+    "video": 1.08,
+    "in person": 1.1,
+    "by text": 0.98,
+    "by call": 1.02
   }
-  return w;
+};
+
+/* Directional tokens (who initiated) */
+const DIRECTION = {
+  "she initiated": 8,
+  "she initiated.": 8,
+  "she initiated ": 8,
+  "she initiated,": 8,
+  "she initiated;": 8,
+  "i initiated": 4,
+  "i initiated.": 4,
+  "i initiated,": 4,
+  "we initiated": 6,
+  "she initiated twice": 12
+};
+
+/* Synonyms mapping to ensure broader matching */
+const SYNONYMS = {
+  "dm": "text",
+  "msg": "text",
+  "messaged": "message",
+  "phoned": "call",
+  "vc": "video call",
+  "videochat": "video call",
+  "vn": "voice note",
+  "left on seen": "left on read",
+  "left on seen": "left on read"
+};
+
+/* small helper: escape regex */
+function escRegex(s){ return s.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"); }
+
+/* normalize input text */
+function normalizeText(s){
+  if(!s) return "";
+  return String(s).toLowerCase().replace(/[\u2019’]/g, "'").replace(/[.,;!?:()]/g," ");
 }
 
-/* ---------- Matching & scoring ---------- */
-function computeNoteDelta(notes, person) {
-  if (!notes) return 0;
+/* simple tokenization (words and small phrases) */
+function tokenize(text){
+  // preserve common multiword tokens of interest
+  const keepPhrases = ["she initiated","i initiated","no reply","left on read","met parents","made plans","cancelled plans","video call","audio call","voice note","sent money"];
+  let t = text;
+  keepPhrases.forEach(p=>{
+    const marker = p.replace(/\s+/g,"__");
+    t = t.replace(new RegExp(escRegex(p),"gi"), marker);
+  });
+  // split
+  const raw = t.split(/\s+/).filter(Boolean);
+  // restore phrases tokens
+  return raw.map(tok => tok.replace(/__/g," "));
+}
+
+/* find base matches using seeds and synonyms */
+function findBaseMatches(tokens){
+  const found = {};
+  const tokenStr = tokens.join(" ");
+  // direct phrase and token scanning
+  Object.keys(ACTION_SEEDS).forEach(key=>{
+    const re = new RegExp("\\b"+escRegex(key)+"\\b","i");
+    if(re.test(tokenStr)) {
+      found[key] = (found[key]||0) + 1;
+    }
+  });
+  // synonyms fallback
+  Object.keys(SYNONYMS).forEach(k=>{
+    const canonical = SYNONYMS[k];
+    const re = new RegExp("\\b"+escRegex(k)+"\\b","i");
+    if(re.test(tokenStr)){
+      found[canonical] = (found[canonical]||0) + 1;
+    }
+  });
+  // token-level stem-based partial matches (covers many word forms)
+  tokens.forEach(tok=>{
+    const st = simpleStem(tok);
+    if(!st || st.length<3) return;
+    Object.keys(ACTION_SEEDS).forEach(key=>{
+      if(key.includes(st) && !found[key]){
+        // small weight if partial
+        found[key] = (found[key]||0) + 0.6;
+      }
+    });
+  });
+
+  return found; // map actionKey -> count/weightFactor
+}
+
+/* small stemmer (safe, simple) */
+function simpleStem(w){
+  if(!w) return w;
+  let s = w.replace(/[^a-z0-9]/gi,"");
+  if(s.length<=3) return s;
+  const endings = ["ing","ed","ly","es","s","er"];
+  for(let e of endings){
+    if(s.endsWith(e) && s.length-e.length>=3) return s.slice(0,-e.length);
+  }
+  return s;
+}
+
+/* compute aggregated modifier multiplier from tokens */
+function computeModifierMultiplier(tokens){
+  let mult = 1.0;
+  tokens.forEach(tok=>{
+    // intensity
+    Object.keys(MODIFIERS.intensity).forEach(k=>{
+      if(tok.includes(k)) mult *= MODIFIERS.intensity[k];
+    });
+    // time
+    Object.keys(MODIFIERS.time).forEach(k=>{
+      if(tok.includes(k)) mult *= MODIFIERS.time[k];
+    });
+    // medium
+    Object.keys(MODIFIERS.medium).forEach(k=>{
+      if(tok.includes(k)) mult *= MODIFIERS.medium[k];
+    });
+  });
+  return mult;
+}
+
+/* compute direction bonus */
+function computeDirectionBonus(text){
+  let bonus = 0;
+  Object.keys(DIRECTION).forEach(k=>{
+    const re = new RegExp("\\b"+escRegex(k.trim())+"\\b","i");
+    if(re.test(text)) bonus += DIRECTION[k];
+  });
+  return bonus;
+}
+
+/* count neutral words presence */
+function containsOnlyNeutralWords(tokens){
+  // If tokens include only neutral and punctuation-like words, we treat as neutral
+  const meaningful = tokens.filter(t => !NEUTRAL_WORDS.has(t));
+  return meaningful.length === 0;
+}
+
+/* compute final delta from notes and person (status-aware damping included here) */
+function computeNoteDeltaV3(notes, person){
+  if(!notes) return 0;
   const text = normalizeText(notes);
 
-  let total = 0;
-  // 1) exact/phrase matches with word boundaries
-  Object.keys(SMART_NOTE_KEYWORDS).forEach(k => {
-    // escape regex
-    const safeKey = k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const re = new RegExp("\\b" + safeKey.replace(/\s+/g, "\\s+") + "\\b", "gi");
-    const matches = text.match(re);
-    if (matches && matches.length) {
-      const count = matches.length;
-      const base = SMART_NOTE_KEYWORDS[k] || 0;
-      const multiplier = Math.max(0.35, 1 - 0.25 * (count - 1));
-      total += Math.round(base * multiplier);
-    }
-  });
+  // quick ignore: if text is short neutral or exactly neutral words, return 0
+  const tokens = tokenize(text);
+  if(tokens.length===0) return 0;
+  if(containsOnlyNeutralWords(tokens)) return 0;
 
-  // 2) tag matches
-  Object.keys(SMART_NOTE_TAGS).forEach(tag => {
-    const re = new RegExp(tag.replace(/[#]/g, "\\$&"), "gi");
-    const matches = text.match(re);
-    if (matches && matches.length) {
-      total += SMART_NOTE_TAGS[tag] * matches.length;
-    }
-  });
-
-  // 3) token-level fuzzy matching (stem + substring fallback)
-  const tokens = text.split(/\s+/).filter(Boolean);
-  tokens.forEach(tok => {
-    const stem = simpleStem(tok);
-    // check if any SMART_NOTE_KEYWORDS key contains the stem as word or substring
-    Object.keys(SMART_NOTE_KEYWORDS).some(k => {
-      // fast path: exact token match within key
-      const safeKey = k.toLowerCase();
-      if (safeKey.split(/\s+/).includes(tok)) {
-        total += Math.round(SMART_NOTE_KEYWORDS[k] * 0.6); // partial match weight
-        return true;
-      }
-      // stem-based substring match
-      if (stem && safeKey.includes(stem) && stem.length >= 3) {
-        total += Math.round(SMART_NOTE_KEYWORDS[k] * 0.4);
-        return true;
-      }
-      return false;
-    });
-  });
-
-  // 4) numeric multipliers (e.g., "2x", "twice", "3 times")
-  const numMatch = text.match(/(\d+)\s*x|\b(\d+)\s+times?\b|\b(twice|thrice)\b/gi);
-  if (numMatch && numMatch.length) {
-    total = Math.round(total * Math.min(1 + numMatch.length * 0.2, 2));
+  // base matches
+  const baseMatches = findBaseMatches(tokens); // map
+  if(Object.keys(baseMatches).length === 0) {
+    // fallback: small heuristic for numbers or explicit tags like #met
+    const tagMatch = (text.match(/#\w+/g) || []).length;
+    if(tagMatch===0) return 0;
   }
 
-  // 5) status-aware modifier to avoid runaway boosts on dating/pause
-  if (person && person.status === "dating") total = Math.round(total * 0.6);
-  if (person && person.status === "pause") total = Math.round(total * 0.25);
+  // modifiers multiplier
+  const modMult = computeModifierMultiplier(tokens);
 
-  // 6) clamp
-  if (total > SMART_MAX_DELTA) total = SMART_MAX_DELTA;
-  if (total < -SMART_MAX_DELTA) total = -SMART_MAX_DELTA;
+  // direction bonus
+  const dirBonus = computeDirectionBonus(text);
+
+  // compute raw total
+  let total = 0;
+  Object.keys(baseMatches).forEach(key=>{
+    const seedWeight = ACTION_SEEDS[key] || 0;
+    const count = baseMatches[key] || 1;
+    // diminishing returns across repeats: each repeat reduces contribution by 25% (floor multiplier 0.35)
+    const repMult = Math.max(0.35, 1 - 0.25 * (count - 1));
+    total += Math.round(seedWeight * repMult * modMult);
+  });
+
+  // add direction as additive (not multiplicative)
+  total += dirBonus;
+
+  // numeric & repetition multiplier (e.g., "2x", "twice" increases effect)
+  const numMatch = text.match(/\b(\d+)\s*(x|times?)\b/gi) || text.match(/\b(twice|thrice)\b/gi);
+  if(numMatch && numMatch.length){
+    total = Math.round(total * Math.min(1 + (numMatch.length * 0.2), 2.0));
+  }
+
+  // status-aware damping: dating reduces positive gains, pause reduces strongly
+  if(person && person.status === "dating" && total > 0){
+    total = Math.round(total * 0.6);
+  }
+  if(person && person.status === "pause" && total > 0){
+    total = Math.round(total * 0.25);
+  }
+
+  // clamp to allowed range
+  if(total > SMART_MAX_DELTA) total = SMART_MAX_DELTA;
+  if(total < -SMART_MAX_DELTA) total = -SMART_MAX_DELTA;
 
   return total;
 }
 
-function formatDeltaLabel(delta) {
-  if (!delta || delta === 0) return "Suggested: —";
+/* helper to format suggestion label */
+function formatSuggestion(delta){
+  if(!delta || delta === 0) return "Suggested: —";
   return delta > 0 ? `Suggested: +${delta}` : `Suggested: ${delta}`;
 }
 
-function applyDeltaToPerson(p, delta) {
-  if (!p) return;
-  const newFocus = Math.max(0, Math.min(100, parseInt(p.focus, 10) + delta));
-  p.focus = newFocus;
-  p.nextMove = getNextMove(p);
-}
+/* helper to safely get element by id (returns null if not found) */
+function $id(id){ try { return document.getElementById(id); } catch(e){ return null; } }
 
 /* =========================
-   RENDER
+   RENDER + DASHBOARD (unchanged logic, but safe)
    ========================= */
 function escapeHtml(s) {
   if (s === undefined || s === null) return "";
@@ -464,7 +448,31 @@ function escapeHtml(s) {
     .replace(/'/g, "&#39;");
 }
 
-function render() {
+function updateDashboard(){
+  if(!people.length){
+    if(dashFocus) dashFocus.textContent = "—";
+    if(dashPause) dashPause.textContent = "—";
+    if(dashAction) dashAction.textContent = "Add someone to begin.";
+    return;
+  }
+
+  const paused = people.filter(p => parseInt(p.focus,10) <= 20);
+
+  const candidates = people
+    .filter(p =>
+      (p.status === "dating" && p.focus >= 80) ||
+      (p.status === "crush" && p.focus >= 60)
+    )
+    .sort((a,b)=>b.focus-a.focus)
+    .slice(0,2);
+
+  if(dashFocus) dashFocus.textContent = candidates.length ? candidates.map(p=>p.name).join(", ") : "—";
+  if(dashPause) dashPause.textContent = paused.length ? paused.map(p=>p.name).join(", ") : "—";
+  if(dashAction) dashAction.textContent = candidates.length ? `${candidates[0].nextMove} — ${candidates[0].name}` : "Stay steady.";
+}
+
+function render(){
+  if(!list) return;
   list.innerHTML = "";
 
   const glowSet = new Set(
@@ -478,20 +486,22 @@ function render() {
       .map(p => p.name)
   );
 
-  people.forEach((p, i) => {
+  people.forEach((p,i)=>{
     const card = document.createElement("div");
-    card.className = `card person ${
-      p.focus <= 20 ? "paused" : glowSet.has(p.name) ? "glow" : ""
-    }`;
+    card.className = `card person ${ (parseInt(p.focus,10) <= 20) ? "paused" : (glowSet.has(p.name) ? "glow" : "") }`;
+
+    const reminderHtml = p.reminder ? `<div class="reminder">⏰ ${escapeHtml(p.reminder)}</div>` : "";
 
     card.innerHTML = `
       <strong>${escapeHtml(p.name)}</strong>
       <span class="sub">${escapeHtml(p.status)}</span>
 
-      <div class="focus-bar">
-        <div class="focus-fill" style="width:${p.focus}%"></div>
+      <div class="focus-bar" aria-hidden="true">
+        <div class="focus-fill" style="width:${escapeHtml(p.focus)}%"></div>
       </div>
-      <div class="sub">${p.focus}% focus</div>
+      <div class="sub">${escapeHtml(p.focus)}% focus</div>
+
+      ${reminderHtml}
 
       <div class="advice"><strong>Next Move:</strong> ${escapeHtml(p.nextMove)}</div>
 
@@ -507,134 +517,155 @@ function render() {
 }
 
 /* =========================
-   ADD PERSON
+   ADD PERSON (unchanged)
    ========================= */
 form.onsubmit = e => {
   e.preventDefault();
-
-  const name = form.name.value.trim();
-  if (!name) return;
+  const name = (form.name && form.name.value || "").trim();
+  if(!name) return;
 
   const p = {
     name,
     status: selectedStatus,
     focus,
-    notes: "",
-    reminder: form.reminder.value.trim(),
+    notes: (form.notes && form.notes.value) ? form.notes.value.trim() : "",
+    reminder: (form.reminder && form.reminder.value) ? form.reminder.value.trim() : "",
     nextMove: ""
   };
-
   p.nextMove = getNextMove(p);
   people.push(p);
 
   save();
   render();
-
   form.reset();
   focus = 0;
   updateFocusUI();
+  // restore default status selection visually
+  document.querySelectorAll(".status-buttons button").forEach(b=>b.classList.remove("active"));
+  if(defaultBtn) defaultBtn.classList.add("active");
   selectedStatus = "crush";
 };
 
 /* =========================
-   EDIT MODAL
+   EDIT modal wiring and robust save (FIXES included)
    ========================= */
-const editModal = document.getElementById("editModal");
-const editNameInput = document.getElementById("editNameInput");
-const editStatusSelect = document.getElementById("editStatusSelect");
-const editFocus = document.getElementById("editFocus");
-const editFocusValue = document.getElementById("editFocusValue");
+const editModal = $id("editModal");
+const editNameInput = $id("editNameInput");
+const editStatusSelect = $id("editStatusSelect");
+const editFocus = $id("editFocus");
+const editFocusValue = $id("editFocusValue");
+const editNotesEl = $id("editNotes");
+const smartSuggestionEl = $id("smartSuggestion");
+const applySmartNotesEl = $id("applySmartNotes");
 
-function openEdit(i) {
+function openEdit(i){
   editingIndex = i;
   const p = people[i];
+  if(editNameInput) editNameInput.value = p.name || "";
+  if(editStatusSelect) editStatusSelect.value = p.status || "crush";
+  if(editFocus) editFocus.value = p.focus || 0;
+  if(editFocusValue) editFocusValue.textContent = (p.focus||0) + "%";
+  if(editNotesEl) editNotesEl.value = p.notes || "";
+  // default checked ON
+  if(applySmartNotesEl) applySmartNotesEl.checked = true;
 
-  editNameInput.value = p.name;
-  editStatusSelect.value = p.status;
-  editFocus.value = p.focus;
-  editFocusValue.textContent = p.focus + "%";
+  const delta = computeNoteDeltaV3(p.notes || "", p);
+  if(smartSuggestionEl) smartSuggestionEl.textContent = formatSuggestion(delta);
 
-  const editNotes = document.getElementById("editNotes");
-  const smartSuggestion = document.getElementById("smartSuggestion");
-  const applySmartNotes = document.getElementById("applySmartNotes");
+  // live updates: notes and status changes
+  if(editNotesEl){
+    editNotesEl.oninput = () => {
+      const d = computeNoteDeltaV3(editNotesEl.value || "", { status: editStatusSelect ? editStatusSelect.value : p.status });
+      if(smartSuggestionEl) smartSuggestionEl.textContent = formatSuggestion(d);
+    };
+  }
+  if(editStatusSelect){
+    editStatusSelect.onchange = () => {
+      const d = computeNoteDeltaV3(editNotesEl ? editNotesEl.value : "", { status: editStatusSelect.value });
+      if(smartSuggestionEl) smartSuggestionEl.textContent = formatSuggestion(d);
+    };
+  }
 
-  editNotes.value = p.notes || "";
-
-  // DEFAULT: checked (user can uncheck)
-  applySmartNotes.checked = true;
-
-  // compute and display suggestion for existing notes
-  smartSuggestion.textContent = formatDeltaLabel(computeNoteDelta(editNotes.value, p));
-
-  // live suggestion as notes change (status-aware)
-  editNotes.oninput = () => {
-    smartSuggestion.textContent = formatDeltaLabel(
-      computeNoteDelta(editNotes.value, { status: editStatusSelect.value || p.status })
-    );
-  };
-
-  // update suggestion if status select changes while editing notes
-  editStatusSelect.onchange = () => {
-    smartSuggestion.textContent = formatDeltaLabel(
-      computeNoteDelta(editNotes.value, { status: editStatusSelect.value })
-    );
-  };
-
-  editModal.classList.remove("hidden");
+  if(editModal) { editModal.classList.remove("hidden"); editModal.setAttribute("aria-hidden","false"); }
   document.body.style.overflow = "hidden";
 }
 
-editFocus.oninput = () => {
-  editFocusValue.textContent = editFocus.value + "%";
-};
+if(editFocus){
+  editFocus.oninput = () => {
+    if(editFocusValue) editFocusValue.textContent = editFocus.value + "%";
+  };
+}
 
-function closeEdit() {
-  editModal.classList.add("hidden");
+/* saveEdit MUST be robust: DOM lookups must be guarded and closeEdit must always run */
+function closeEdit(){
+  if(editModal) { editModal.classList.add("hidden"); editModal.setAttribute("aria-hidden","true"); }
   document.body.style.overflow = "";
   editingIndex = null;
 }
 
-function saveEdit() {
-  if (editingIndex === null) return;
+function saveEdit(){
+  // we guarantee closeEdit() will run regardless; wrap main logic in try/catch/finally
+  try {
+    if(editingIndex === null) {
+      return;
+    }
+    const p = people[editingIndex];
 
-  const p = people[editingIndex];
-  p.name = editNameInput.value.trim();
-  p.status = editStatusSelect.value;
-  p.focus = parseInt(editFocus.value, 10) || 0;
+    // safe reads with defaults
+    const newName = editNameInput ? (editNameInput.value || "").trim() : p.name;
+    const newStatus = editStatusSelect ? (editStatusSelect.value || p.status) : p.status;
+    const sliderVal = editFocus ? (parseInt(editFocus.value,10) || 0) : p.focus;
+    const notesVal = editNotesEl ? (editNotesEl.value || "").trim() : (p.notes || "");
+    const applySmart = applySmartNotesEl ? !!applySmartNotesEl.checked : true; // default true if missing
 
-  const editNotes = document.getElementById("editNotes");
-  const applySmartNotes = document.getElementById("applySmartNotes");
-  const notesValue = editNotes ? editNotes.value.trim() : "";
-  const delta = computeNoteDelta(notesValue, p);
+    // compute delta using event engine
+    const delta = computeNoteDeltaV3(notesVal, { status: newStatus });
 
-  p.notes = notesValue;
+    // single-source finalFocus computation: base from slider then add delta if allowed
+    let finalFocus = sliderVal;
+    if(applySmart && Math.abs(delta) >= SMART_MIN_APPLY_THRESHOLD) {
+      finalFocus = finalFocus + delta;
+    }
 
-  if (applySmartNotes.checked && Math.abs(delta) >= SMART_MIN_APPLY_THRESHOLD) {
-    applyDeltaToPerson(p, delta);
+    // clamp
+    finalFocus = Math.max(0, Math.min(100, finalFocus));
+
+    // assign values
+    p.name = newName || p.name;
+    p.status = newStatus;
+    p.focus = finalFocus;
+    p.notes = notesVal;
+    p.nextMove = getNextMove(p);
+
+    // persist & update UI
+    save();
+    render();
+
+  } catch (err) {
+    // ensure we don't silently swallow major issues: log for debugging
+    console.error("saveEdit error:", err);
+  } finally {
+    // ALWAYS close modal to avoid stuck modal state
+    closeEdit();
   }
-
-  p.nextMove = getNextMove(p);
-
-  save();
-  render();
-  closeEdit();
 }
 
 /* =========================
-   REMOVE / SAVE
+   REMOVE / SAVE / INIT
    ========================= */
-function removePerson(i) {
-  people.splice(i, 1);
+function removePerson(i){
+  people.splice(i,1);
   save();
   render();
 }
-
-function save() {
-  localStorage.setItem("rizz_people", JSON.stringify(people));
+function save(){
+  try {
+    localStorage.setItem("rizz_people", JSON.stringify(people));
+  } catch(e) {
+    console.error("Failed to save localStorage", e);
+  }
 }
 
-/* =========================
-   INIT
-   ========================= */
+/* initialization */
 updateFocusUI();
 render();
