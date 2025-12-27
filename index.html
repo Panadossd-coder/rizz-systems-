@@ -71,6 +71,19 @@
       <input type="range" id="editFocus" min="0" max="100" />
       <div id="editFocusValue" style="text-align:center;margin-top:8px;color:#ff99c8;font-weight:700;">0%</div>
 
+      <!-- Smart Notes (Version 2.2) -->
+      <label for="editNotes" style="display:block;margin-top:12px;font-weight:700;color:#ffd6ea;">Notes (Edit-time)</label>
+      <textarea id="editNotes" placeholder="Short event notes — e.g. met, called, ignored" style="min-height:68px;padding:10px;border-radius:10px;border:none;background:rgba(255,255,255,0.03);color:#fff;margin-top:8px;"></textarea>
+
+      <div style="display:flex;gap:8px;align-items:center;margin-top:8px;">
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#ffd6ea;">
+          <input id="applySmartNotes" type="checkbox" style="width:16px;height:16px;" />
+          Auto-apply Smart Notes
+        </label>
+        <div id="smartSuggestion" aria-live="polite" style="margin-left:auto;font-weight:700;color:#ffcc80;">Suggested: —</div>
+      </div>
+      <!-- End Smart Notes -->
+
       <div class="edit-actions">
         <button type="button" class="cancel" onclick="closeEdit()">Cancel</button>
         <button type="button" onclick="saveEdit()">Save</button>
