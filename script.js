@@ -10,6 +10,7 @@ const statusInput = form.status;
 
 let focus = 0;
 let people = JSON.parse(localStorage.getItem("rizz_people")) || [];
+let editIndex = null;
 
 /* STATUS */
 document.querySelectorAll(".status-buttons button").forEach(btn=>{
@@ -30,6 +31,13 @@ function updateFocus(){
   form.focus.value = focus;
 }
 
+/* NEXT MOVE */
+function nextMove(p){
+  if(p.focus<=20) return "Do not over-invest";
+  if(p.focus>=80) return "Compliment her vibe";
+  return "Stay steady";
+}
+
 /* DASH */
 function updateDashboard(){
   if(!people.length){
@@ -38,9 +46,9 @@ function updateDashboard(){
     dashAction.textContent="Add someone to begin.";
     return;
   }
-  const top = people.sort((a,b)=>b.focus-a.focus)[0];
+  const top = [...people].sort((a,b)=>b.focus-a.focus)[0];
   dashFocus.textContent = top.name;
-  dashAction.textContent = top.focus<=20?"Do not over-invest":"Compliment her vibe";
+  dashAction.textContent = nextMove(top);
 }
 
 /* RENDER */
@@ -48,11 +56,11 @@ function render(){
   list.innerHTML="";
   people.forEach((p,i)=>{
     const card=document.createElement("div");
-    card.className="card person"+(p.focus<=20?" low":"");
+    card.className="card person"+(p.focus<=20?" paused":"");
     card.innerHTML=`
       <strong>${p.name}</strong><br>
       ${p.focus}% focus<br>
-      <em>Next Move: ${p.focus<=20?"Do not over-invest":"Compliment her vibe"}</em>
+      <em>Next Move: ${nextMove(p)}</em>
       <div class="card-actions">
         <button onclick="openEdit(${i})">Edit</button>
         <button onclick="removePerson(${i})">Remove</button>
@@ -77,7 +85,6 @@ function removePerson(i){
 }
 
 /* EDIT */
-let editIndex=null;
 function openEdit(i){
   editIndex=i;
   editModal.classList.remove("hidden");
